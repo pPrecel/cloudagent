@@ -7,7 +7,7 @@ import (
 )
 
 type Options struct {
-	Ctx     context.Context
+	Context context.Context
 	Logger  *logrus.Logger
 	Verbose bool
 }

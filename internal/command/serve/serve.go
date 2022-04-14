@@ -1,60 +1,76 @@
 package serve
 
 import (
-	"fmt"
+	"net"
+	"os"
 
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/pPrecel/gardener-agent/internal/gardener"
+	"github.com/pPrecel/gardener-agent/internal/agent"
+	gardener_agent "github.com/pPrecel/gardener-agent/internal/agent/proto"
 	"github.com/spf13/cobra"
+	googlerpc "google.golang.org/grpc"
 )
 
 func NewCmd(o *options) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "serve",
+		PreRunE: func(_ *cobra.Command, _ []string) error {
+			return o.validate()
+		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return run(o)
 		},
 	}
 
-	cmd.PersistentFlags().StringVarP(&o.KubeconfigPath, "kubeconfigPath", "k", "~/.gardener-agent/kubeconfig.yml", "Provides path to kubeconfig.")
-	cmd.PersistentFlags().StringVarP(&o.Namespace, "namespace", "n", "~/.gardener-agent/kubeconfig.yml", "Provides path to kubeconfig.")
+	cmd.Flags().StringVarP(&o.KubeconfigPath, "kubeconfigPath", "k", "~/.gardener-agent/kubeconfig.yml", "Provides path to kubeconfig.")
+	cmd.Flags().StringVarP(&o.Namespace, "namespace", "n", "", "Provides gardener namespace.")
+	cmd.Flags().StringVarP(&o.CronSpec, "cronSpec", "c", "@every 15m", "Provices spec for cron configuration.")
 
 	return cmd
 }
 
 func run(o *options) error {
-	o.Logger.Info("starting gardeners agent daemon")
+	o.Logger.Info("starting gardeners agent")
 
-	o.Logger.Info("loading configuration...")
-	// TODO: load config
-
-	o.Logger.Info("creating gardeners client")
-	cfg, err := gardener.NewClusterConfig(o.KubeconfigPath)
+	o.Logger.Infof("removing old socket: '%s'", agent.Address)
+	err := os.RemoveAll(agent.Address)
 	if err != nil {
-		o.Logger.Fatal(err)
+		return err
 	}
 
-	client, err := gardener.NewClient(cfg)
+	state := &agent.LastState{}
+
+	o.Logger.Infof("starting state watcher with spec: '%s'", o.CronSpec)
+	watcher, err := agent.NewWatcher(agent.WatcherOption{
+		KubeconfigPath: o.KubeconfigPath,
+		Namespace:      o.Namespace,
+		Spec:           o.CronSpec,
+		Context:        o.Context,
+		StateSetter:    state,
+		Logger:         o.Logger,
+	})
 	if err != nil {
-		o.Logger.Fatal(err)
+		return err
 	}
+	defer watcher.Stop()
 
-	list, err := client.Shoots(o.Namespace).List(o.Ctx, v1.ListOptions{})
+	o.Logger.Debug("starting watcher")
+	// we'd like to start cron job together with the whole program
+	watcher.Run()
+	watcher.Start()
+
+	o.Logger.Debug("configuring grpc server")
+	lis, err := net.Listen(agent.Network, agent.Address)
 	if err != nil {
-		o.Logger.Fatal(err)
+		return err
 	}
 
-	for i := range list.Items {
-		item := list.Items[i]
-		fmt.Printf("\n\n%v: %s,\n %+v\n\n", i, item.Name, item.ObjectMeta.Annotations)
-	}
+	grpcServer := googlerpc.NewServer(googlerpc.EmptyServerOption{})
+	agentServer := agent.NewServer(&agent.ServerOption{
+		Getter: state,
+		Logger: o.Logger,
+	})
+	gardener_agent.RegisterAgentServer(grpcServer, agentServer)
 
-	o.Logger.Info("starting state watcher")
-	// TODO: start cron job
-
-	o.Logger.Info("starting grpc socket server")
-	// TODO: start server
-
-	return nil
+	o.Logger.Info("starting grpc server")
+	return grpcServer.Serve(lis)
 }

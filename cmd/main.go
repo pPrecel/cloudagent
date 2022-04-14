@@ -11,17 +11,21 @@ import (
 )
 
 func main() {
-	cmd := &cobra.Command{
-		Use: "gardenagent",
+	o := &command.Options{
+		Context: context.Background(),
+		Logger:  logrus.New(),
 	}
 
-	o := &command.Options{
-		Ctx:    context.Background(),
-		Logger: logrus.New(),
+	cmd := &cobra.Command{
+		Use: "gardenagent",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			if o.Verbose == true {
+				o.Logger.SetLevel(logrus.DebugLevel)
+			}
+		},
 	}
 
 	cmd.PersistentFlags().BoolVarP(&o.Verbose, "verbose", "v", false, "Displays details of actions triggered by the command.")
-	cmd.PersistentFlags().BoolP("help", "h", false, "Provides command help.")
 
 	cmd.AddCommand(
 		serve.NewCmd(serve.NewOptions(o)),

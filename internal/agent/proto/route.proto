@@ -15,5 +15,12 @@ message Shoot {
     string name = 1;
     string namespace = 2;
     map<string,string> labels = 3;
+    map<string,string> annotations = 4;
+    Condition condition = 5;
 }
-  
+
+enum Condition {
+    HEALTHY = 0;
+    HIBERNATED = 1;
+    CORRUPTED = 2;
+  }
