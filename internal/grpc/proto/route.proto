@@ -1,0 +1,19 @@
+syntax = "proto3";
+option go_package = "github.com/pPrecel/gardener-agent";
+
+service Agent {
+    rpc Shoots(Empty) returns (ShootList) {}
+}
+
+message Empty {}
+
+message ShootList {
+    repeated Shoot shoots = 1;
+}
+
+message Shoot {
+    string name = 1;
+    string namespace = 2;
+    map<string,string> labels = 3;
+}
+  

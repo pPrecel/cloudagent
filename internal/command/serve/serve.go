@@ -17,6 +17,9 @@ func NewCmd(o *options) *cobra.Command {
 		},
 	}
 
+	cmd.PersistentFlags().StringVarP(&o.KubeconfigPath, "kubeconfigPath", "k", "~/.gardener-agent/kubeconfig.yml", "Provides path to kubeconfig.")
+	cmd.PersistentFlags().StringVarP(&o.Namespace, "namespace", "n", "~/.gardener-agent/kubeconfig.yml", "Provides path to kubeconfig.")
+
 	return cmd
 }
 
@@ -27,7 +30,7 @@ func run(o *options) error {
 	// TODO: load config
 
 	o.Logger.Info("creating gardeners client")
-	cfg, err := gardener.NewClusterConfig("/Users/i517616/Desktop/kubeconfig-garden-wookiee.yml")
+	cfg, err := gardener.NewClusterConfig(o.KubeconfigPath)
 	if err != nil {
 		o.Logger.Fatal(err)
 	}
@@ -37,7 +40,7 @@ func run(o *options) error {
 		o.Logger.Fatal(err)
 	}
 
-	list, err := client.Shoots("garden-wookiee").List(o.Ctx, v1.ListOptions{})
+	list, err := client.Shoots(o.Namespace).List(o.Ctx, v1.ListOptions{})
 	if err != nil {
 		o.Logger.Fatal(err)
 	}
@@ -52,4 +55,6 @@ func run(o *options) error {
 
 	o.Logger.Info("starting grpc socket server")
 	// TODO: start server
+
+	return nil
 }
