@@ -54,8 +54,6 @@ func run(o *options) error {
 	defer watcher.Stop()
 
 	o.Logger.Debug("starting watcher")
-	// we'd like to start cron job together with the whole program
-	watcher.Run()
 	watcher.Start()
 
 	o.Logger.Debug("configuring grpc server")
