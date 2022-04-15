@@ -1,6 +1,8 @@
 package state
 
 import (
+	"time"
+
 	"github.com/pPrecel/gardener-agent/internal/command"
 	"github.com/pkg/errors"
 )
@@ -8,6 +10,9 @@ import (
 type options struct {
 	*command.Options
 	CreatedBy string
+	OutFormat string
+	ErrFormat string
+	Timeout   time.Duration
 }
 
 func NewOptions(opts *command.Options) *options {

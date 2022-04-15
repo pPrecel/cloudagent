@@ -2,11 +2,12 @@ package state
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/pPrecel/gardener-agent/internal/agent"
 	gardener_agent "github.com/pPrecel/gardener-agent/internal/agent/proto"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
@@ -16,28 +17,28 @@ func NewCmd(o *options) *cobra.Command {
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return o.validate()
 		},
-		RunE: func(_ *cobra.Command, _ []string) error {
-			return run(o)
+		Run: func(_ *cobra.Command, _ []string) {
+			run(o)
 		},
 	}
 
 	cmd.Flags().StringVarP(&o.CreatedBy, "createdBy", "c", "", "Provides filter argument for owned, hibernated and corrupted shoots.")
+	cmd.Flags().StringVarP(&o.OutFormat, "output-format", "o", "%d/%d/%d/%d", `Provides format for the output information. Must contains four '%d' elements where:
+	- first is number of running clusters, 
+	- second is number of hibernated clusters, 
+	- third is number of cluster with unknown status, 
+	- fourth is number of all cluster in namespace.`)
+	cmd.Flags().StringVarP(&o.ErrFormat, "error-format", "e", "ERR", "Provides format of output after occures an error.")
+	cmd.Flags().DurationVarP(&o.Timeout, "timeout", "t", 2*time.Second, "Provides timeout for the command.")
 
 	return cmd
 }
 
-func run(o *options) error {
-	o.Logger.Debug("creating grpc client")
-	conn, err := grpc.Dial(fmt.Sprintf("%s://%s", agent.Network, agent.Address), grpc.WithInsecure(), grpc.WithBlock())
+func run(o *options) {
+	list, err := shootState(o)
 	if err != nil {
-		logrus.Fatalf("fail to dial: %v", err)
-	}
-	defer conn.Close()
-
-	o.Logger.Debug("sending request")
-	list, err := gardener_agent.NewAgentClient(conn).Shoots(o.Context, &gardener_agent.Empty{})
-	if err != nil {
-		return err
+		fmt.Print(o.ErrFormat)
+		return
 	}
 
 	hibernated := 0
@@ -59,9 +60,29 @@ func run(o *options) error {
 		}
 	}
 
-	fmt.Printf("%d/%d/%d/%d", healthy, hibernated, corrupted, len(list.Shoots))
+	fmt.Printf(o.OutFormat, healthy, hibernated, corrupted, len(list.Shoots))
+}
 
-	return nil
+func shootState(o *options) (*gardener_agent.ShootList, error) {
+	o.Logger.Debug("creating grpc client")
+	conn, err := grpc.Dial(fmt.Sprintf("%s://%s", agent.Network, agent.Address), grpc.WithInsecure())
+	if err != nil {
+		o.Logger.Debugf("fail to dial: %v", err)
+		return nil, err
+	}
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(o.Context, o.Timeout)
+	defer cancel()
+
+	o.Logger.Debug("sending request")
+	list, err := gardener_agent.NewAgentClient(conn).Shoots(ctx, &gardener_agent.Empty{})
+	if err != nil {
+		o.Logger.Debugf("fail to get shoots: %v", err)
+		return nil, err
+	}
+
+	return list, nil
 }
 
 func isCreatedBy(creator string, shoot *gardener_agent.Shoot) bool {
