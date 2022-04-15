@@ -50,8 +50,8 @@ func (s *server) Shoots(ctx context.Context, _ *gardener_agent.Empty) (*gardener
 		cond := gardener_agent.Condition_HEALTHY
 		if item.Status.IsHibernated {
 			cond = gardener_agent.Condition_HIBERNATED
-		} else if isCorrupted(item) {
-			cond = gardener_agent.Condition_CORRUPTED
+		} else if isConditionUnknown(item) {
+			cond = gardener_agent.Condition_UNKNOWN
 		}
 
 		list.Shoots = append(list.Shoots, &gardener_agent.Shoot{
@@ -67,9 +67,9 @@ func (s *server) Shoots(ctx context.Context, _ *gardener_agent.Empty) (*gardener
 	return list, nil
 }
 
-func isCorrupted(shoot v1beta1.Shoot) bool {
+func isConditionUnknown(shoot v1beta1.Shoot) bool {
 	for i := range shoot.Status.Conditions {
-		if shoot.Status.Conditions[i].Status == v1beta1.ConditionFalse {
+		if shoot.Status.Conditions[i].Status != v1beta1.ConditionTrue {
 			return true
 		}
 	}

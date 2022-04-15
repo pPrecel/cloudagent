@@ -22,5 +22,5 @@ message Shoot {
 enum Condition {
     HEALTHY = 0;
     HIBERNATED = 1;
-    CORRUPTED = 2;
+    UNKNOWN = 2;
   }
