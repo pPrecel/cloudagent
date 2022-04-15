@@ -33,6 +33,9 @@ func main() {
 
 	cmd.PersistentFlags().BoolVarP(&o.Verbose, "verbose", "v", false, "Displays details of actions triggered by the command.")
 
+	cmd.SetHelpCommand(&cobra.Command{Hidden: true})
+	cmd.AddCommand(&cobra.Command{Use: "completion", Hidden: true})
+
 	cmd.AddCommand(
 		serve.NewCmd(serve.NewOptions(o)),
 		state.NewCmd(state.NewOptions(o)),
