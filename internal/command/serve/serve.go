@@ -21,7 +21,7 @@ func NewCmd(o *options) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&o.KubeconfigPath, "kubeconfigPath", "k", "~/.gardener-agent/kubeconfig.yml", "Provides path to kubeconfig.")
+	cmd.Flags().StringVarP(&o.KubeconfigPath, "kubeconfigPath", "k", "", "Provides path to kubeconfig.")
 	cmd.Flags().StringVarP(&o.Namespace, "namespace", "n", "", "Provides gardener namespace.")
 	cmd.Flags().StringVarP(&o.CronSpec, "cronSpec", "c", "@every 15m", "Provices spec for cron configuration.")
 

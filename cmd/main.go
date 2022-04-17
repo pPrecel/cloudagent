@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/pPrecel/gardener-agent/internal/command"
+	"github.com/pPrecel/gardener-agent/internal/command/generate"
 	"github.com/pPrecel/gardener-agent/internal/command/serve"
 	"github.com/pPrecel/gardener-agent/internal/command/state"
 	"github.com/sirupsen/logrus"
@@ -12,6 +14,7 @@ import (
 
 func main() {
 	log := logrus.New()
+	log.SetOutput(os.Stdout)
 	formatter := new(logrus.TextFormatter)
 	formatter.TimestampFormat = "2006-01-02 15:04:05"
 	formatter.FullTimestamp = true
@@ -23,7 +26,8 @@ func main() {
 	}
 
 	cmd := &cobra.Command{
-		Use: "gardenagent",
+		Use:          "gardenagent",
+		SilenceUsage: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			if o.Verbose == true {
 				o.Logger.SetLevel(logrus.DebugLevel)
@@ -39,6 +43,7 @@ func main() {
 	cmd.AddCommand(
 		serve.NewCmd(serve.NewOptions(o)),
 		state.NewCmd(state.NewOptions(o)),
+		generate.NewCmd(generate.NewOptions(o)),
 	)
 
 	err := cmd.Execute()

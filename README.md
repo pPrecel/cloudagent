@@ -14,10 +14,40 @@ This application is created with a view to using it as [the tmux](https://github
     make build
     ```
 
-2. Add application to PATH:
+2. Add program to PATH and install it as a system agent:
 
     ```bash
-    ln -s $(pwd)/.out/gardenagent /usr/local/bin/gardenagent
+    make ln-to-path
+    make install-agent kubeconfigPath=<KUBECONFIG_PATH> namespace=<NAMESPACE>
     ```
 
-    > **NOTE:** you can copy binary instead of linking it by replacing the `ln -s` command with the`cp`.
+    > **NOTE:** for local development or need to get more informations from the agent you can pass more arguments to the `make install-agent` command like: `other_flags=--agentVerbose`.
+
+3. Check if program works by getting its logs:
+
+    ```bash
+    tail /tmp/gardener-agent.stdout
+    ```
+
+4. After waiting ~60 seconds for first iteration of the watcher you can get cluster state:
+
+    ```bash
+    gardenagent state --createdBy <OWNER_NAME>
+    ```
+
+## Un-installation
+
+1. Remove application from path and remove system agent:
+
+    ```bash
+    make rm-from-path
+    make uninstall-agent
+    ```
+
+## Integration with tmux
+
+To add this application to tmux put line below in the `~/.tmux.conf` file:
+
+```text
+set -ag status-right ' #(gardenagent state --createdBy <OWNER_NAME>) '
+```
