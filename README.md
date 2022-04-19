@@ -35,7 +35,7 @@ This application is created with a view to using it as [the tmux](https://github
 4. After waiting ~60 seconds for first iteration of the watcher you can get cluster state:
 
     ```bash
-    gardenagent state --createdBy <OWNER_NAME>
+    cloudagent state --createdBy <OWNER_NAME>
     ```
 
 ## Un-installation
@@ -52,5 +52,5 @@ This application is created with a view to using it as [the tmux](https://github
 To add this application to tmux put line below in the `~/.tmux.conf` file:
 
 ```text
-set -ag status-right ' #(gardenagent state --createdBy <OWNER_NAME>) '
+set -ag status-right ' #(cloudagent state --createdBy <OWNER_NAME>) '
 ```

@@ -13,7 +13,7 @@ const (
 		<string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:</string>
 	</dict>
 	<key>Label</key>
-	<string>com.pPrecel.gardenagent.agent.plist</string>
+	<string>com.pPrecel.cloudagent.agent.plist</string>
 	<key>ProgramArguments</key>
 	<array>
 		<string>%s</string>

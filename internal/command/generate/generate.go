@@ -12,7 +12,7 @@ func NewCmd(o *options) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                   "generate [plist]",
 		Short:                 "Generate some system-oriented utils.",
-		Long:                  "Use this command to generate a system-oriented utils it would help you in communication between the gardenagent and other tools.",
+		Long:                  "Use this command to generate a system-oriented utils it would help you in communication between the cloudagent and other tools.",
 		DisableFlagsInUseLine: true,
 		ValidArgs:             []string{"plist"},
 		Args:                  cobra.ExactValidArgs(1),

@@ -19,7 +19,7 @@ func main() {
 	}
 
 	cmd := &cobra.Command{
-		Use:          "gardenagent",
+		Use:          "cloudagent",
 		SilenceUsage: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			if o.Verbose == true {
