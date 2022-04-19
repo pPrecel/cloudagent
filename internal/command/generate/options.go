@@ -7,7 +7,7 @@ type options struct {
 	KubeconfigPath string
 	Namespace      string
 	CronSpec       string
-	AgentVerbose bool
+	AgentVerbose   bool
 }
 
 func NewOptions(o *command.Options) *options {

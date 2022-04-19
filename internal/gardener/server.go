@@ -1,4 +1,4 @@
-package agent
+package gardener
 
 import (
 	"context"
@@ -7,11 +7,6 @@ import (
 	gardener_agent "github.com/pPrecel/gardener-agent/internal/agent/proto"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-)
-
-const (
-	Address = "/tmp/gardener-agent.sock"
-	Network = "unix"
 )
 
 var _ gardener_agent.AgentServer = &server{}

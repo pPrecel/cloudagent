@@ -37,4 +37,4 @@ protobuf:
 
 .PHONY: verify
 verify:
-	./hack/verify.sh
+	@./hack/verify.sh

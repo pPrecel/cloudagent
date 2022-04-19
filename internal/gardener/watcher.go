@@ -1,9 +1,8 @@
-package agent
+package gardener
 
 import (
 	"context"
 
-	"github.com/pPrecel/gardener-agent/internal/gardener"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,13 +21,13 @@ type WatcherOption struct {
 
 func NewWatcher(opts WatcherOption) (*cron.Cron, error) {
 	opts.Logger.Debug("creating cluster config")
-	cfg, err := gardener.NewClusterConfig(opts.KubeconfigPath)
+	cfg, err := newClusterConfig(opts.KubeconfigPath)
 	if err != nil {
 		return nil, err
 	}
 
 	opts.Logger.Debug("creating gardener client")
-	c, err := gardener.NewClient(cfg)
+	c, err := newClient(cfg)
 	if err != nil {
 		return nil, err
 	}

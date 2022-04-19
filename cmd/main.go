@@ -13,16 +13,9 @@ import (
 )
 
 func main() {
-	log := logrus.New()
-	log.SetOutput(os.Stdout)
-	formatter := new(logrus.TextFormatter)
-	formatter.TimestampFormat = "2006-01-02 15:04:05"
-	formatter.FullTimestamp = true
-	log.SetFormatter(formatter)
-
 	o := &command.Options{
 		Context: context.Background(),
-		Logger:  log,
+		Logger:  newLogger(),
 	}
 
 	cmd := &cobra.Command{
@@ -50,4 +43,15 @@ func main() {
 	if err != nil {
 		o.Logger.Fatal(err)
 	}
+}
+
+func newLogger() *logrus.Logger {
+	log := logrus.New()
+	log.SetOutput(os.Stdout)
+	formatter := new(logrus.TextFormatter)
+	formatter.TimestampFormat = "2006-01-02 15:04:05"
+	formatter.FullTimestamp = true
+	log.SetFormatter(formatter)
+
+	return log
 }
