@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pPrecel/gardener-agent/internal/agent"
-	gardener_agent "github.com/pPrecel/gardener-agent/internal/agent/proto"
+	"github.com/pPrecel/cloud-agent/internal/agent"
+	cloud_agent "github.com/pPrecel/cloud-agent/internal/agent/proto"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -51,9 +51,9 @@ func run(o *options) {
 			continue
 		}
 
-		if list.Shoots[i].Condition == gardener_agent.Condition_HIBERNATED {
+		if list.Shoots[i].Condition == cloud_agent.Condition_HIBERNATED {
 			hibernated++
-		} else if list.Shoots[i].Condition == gardener_agent.Condition_UNKNOWN {
+		} else if list.Shoots[i].Condition == cloud_agent.Condition_UNKNOWN {
 			corrupted++
 		} else {
 			healthy++
@@ -63,7 +63,7 @@ func run(o *options) {
 	fmt.Printf(o.OutFormat, healthy, hibernated, corrupted, len(list.Shoots))
 }
 
-func shootState(o *options) (*gardener_agent.ShootList, error) {
+func shootState(o *options) (*cloud_agent.ShootList, error) {
 	o.Logger.Debug("creating grpc client")
 	conn, err := grpc.Dial(fmt.Sprintf("%s://%s", agent.Network, agent.Address), grpc.WithInsecure())
 	if err != nil {
@@ -76,7 +76,7 @@ func shootState(o *options) (*gardener_agent.ShootList, error) {
 	defer cancel()
 
 	o.Logger.Debug("sending request")
-	list, err := gardener_agent.NewAgentClient(conn).Shoots(ctx, &gardener_agent.Empty{})
+	list, err := cloud_agent.NewAgentClient(conn).GardenerShoots(ctx, &cloud_agent.Empty{})
 	if err != nil {
 		o.Logger.Debugf("fail to get shoots: %v", err)
 		return nil, err
@@ -85,7 +85,7 @@ func shootState(o *options) (*gardener_agent.ShootList, error) {
 	return list, nil
 }
 
-func isCreatedBy(creator string, shoot *gardener_agent.Shoot) bool {
+func isCreatedBy(creator string, shoot *cloud_agent.Shoot) bool {
 	if shoot.Annotations["gardener.cloud/created-by"] == creator {
 		return true
 	}

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 echo ">==( go mod verify )==="
 go mod verify
 echo "<==(      OK       )==="

@@ -1,15 +1,24 @@
-package gardener
+package agent
 
 import (
 	"context"
+	"errors"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	gardener_agent "github.com/pPrecel/gardener-agent/internal/agent/proto"
-	"github.com/pkg/errors"
+	cloud_agent "github.com/pPrecel/cloud-agent/internal/agent/proto"
 	"github.com/sirupsen/logrus"
 )
 
-var _ gardener_agent.AgentServer = &server{}
+const (
+	Address = "/tmp/cloud-agent.sock"
+	Network = "unix"
+)
+
+var _ cloud_agent.AgentServer = &server{}
+
+type StateGetter interface {
+	Get() *v1beta1.ShootList
+}
 
 type ServerOption struct {
 	Getter StateGetter
@@ -17,20 +26,19 @@ type ServerOption struct {
 }
 
 type server struct {
-	gardener_agent.UnimplementedAgentServer
-
-	logger *logrus.Logger
+	cloud_agent.UnimplementedAgentServer
 	getter StateGetter
+	logger *logrus.Logger
 }
 
-func NewServer(opts *ServerOption) gardener_agent.AgentServer {
+func NewServer(opts *ServerOption) cloud_agent.AgentServer {
 	return &server{
 		logger: opts.Logger,
 		getter: opts.Getter,
 	}
 }
 
-func (s *server) Shoots(ctx context.Context, _ *gardener_agent.Empty) (*gardener_agent.ShootList, error) {
+func (s *server) GardenerShoots(ctx context.Context, _ *cloud_agent.Empty) (*cloud_agent.ShootList, error) {
 	s.logger.Debug("handling request")
 
 	state := s.getter.Get()
@@ -38,18 +46,18 @@ func (s *server) Shoots(ctx context.Context, _ *gardener_agent.Empty) (*gardener
 		return nil, errors.New("can't get latest shoots list")
 	}
 
-	list := &gardener_agent.ShootList{}
+	list := &cloud_agent.ShootList{}
 	for i := range state.Items {
 		item := state.Items[i]
 
-		cond := gardener_agent.Condition_HEALTHY
+		cond := cloud_agent.Condition_HEALTHY
 		if item.Status.IsHibernated {
-			cond = gardener_agent.Condition_HIBERNATED
+			cond = cloud_agent.Condition_HIBERNATED
 		} else if isConditionUnknown(item) {
-			cond = gardener_agent.Condition_UNKNOWN
+			cond = cloud_agent.Condition_UNKNOWN
 		}
 
-		list.Shoots = append(list.Shoots, &gardener_agent.Shoot{
+		list.Shoots = append(list.Shoots, &cloud_agent.Shoot{
 			Name:        item.Name,
 			Namespace:   item.Namespace,
 			Labels:      item.Labels,

@@ -1,11 +1,14 @@
 syntax = "proto3";
-option go_package = "github.com/pPrecel/gardener-agent;gardener_agent";
+option go_package = "github.com/pPrecel/cluster-agent;cluster_agent";
 
 service Agent {
-    rpc Shoots(Empty) returns (ShootList) {}
+    rpc GardenerShoots(Empty) returns (ShootList) {}
+    rpc GCPClusters(Empty) returns (ClusterList) {}
 }
 
 message Empty {}
+
+message ClusterList {}
 
 message ShootList {
     repeated Shoot shoots = 1;

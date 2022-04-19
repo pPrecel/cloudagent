@@ -1,6 +1,6 @@
 package generate
 
-import "github.com/pPrecel/gardener-agent/internal/command"
+import "github.com/pPrecel/cloud-agent/internal/command"
 
 type options struct {
 	*command.Options

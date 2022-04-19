@@ -3,7 +3,7 @@ package state
 import (
 	"time"
 
-	"github.com/pPrecel/gardener-agent/internal/command"
+	"github.com/pPrecel/cloud-agent/internal/command"
 	"github.com/pkg/errors"
 )
 

@@ -4,10 +4,10 @@ import (
 	"context"
 	"os"
 
-	"github.com/pPrecel/gardener-agent/internal/command"
-	"github.com/pPrecel/gardener-agent/internal/command/generate"
-	"github.com/pPrecel/gardener-agent/internal/command/serve"
-	"github.com/pPrecel/gardener-agent/internal/command/state"
+	"github.com/pPrecel/cloud-agent/internal/command"
+	"github.com/pPrecel/cloud-agent/internal/command/generate"
+	"github.com/pPrecel/cloud-agent/internal/command/serve"
+	"github.com/pPrecel/cloud-agent/internal/command/state"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )

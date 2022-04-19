@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pPrecel/gardener-agent/internal/darwin"
+	"github.com/pPrecel/cloud-agent/internal/darwin"
 	"github.com/spf13/cobra"
 )
 

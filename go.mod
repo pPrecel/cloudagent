@@ -1,4 +1,4 @@
-module github.com/pPrecel/gardener-agent
+module github.com/pPrecel/cloud-agent
 
 go 1.18
 

@@ -6,12 +6,7 @@ import (
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 )
 
-var _ StateGetter = &LastState{}
 var _ StateSetter = &LastState{}
-
-type StateGetter interface {
-	Get() *v1beta1.ShootList
-}
 
 type StateSetter interface {
 	Set(*v1beta1.ShootList)

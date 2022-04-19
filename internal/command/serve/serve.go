@@ -4,9 +4,9 @@ import (
 	"net"
 	"os"
 
-	"github.com/pPrecel/gardener-agent/internal/agent"
-	gardener_agent "github.com/pPrecel/gardener-agent/internal/agent/proto"
-	"github.com/pPrecel/gardener-agent/internal/gardener"
+	"github.com/pPrecel/cloud-agent/internal/agent"
+	cloud_agent "github.com/pPrecel/cloud-agent/internal/agent/proto"
+	"github.com/pPrecel/cloud-agent/internal/gardener"
 	"github.com/spf13/cobra"
 	googlerpc "google.golang.org/grpc"
 )
@@ -41,14 +41,21 @@ func run(o *options) error {
 	state := &gardener.LastState{}
 
 	o.Logger.Infof("starting state watcher with spec: '%s'", o.CronSpec)
-	watcher, err := gardener.NewWatcher(gardener.WatcherOption{
+	gardenerFn, err := gardener.NewWatchFunc(gardener.WatchOptions{
 		KubeconfigPath: o.KubeconfigPath,
 		Namespace:      o.Namespace,
-		Spec:           o.CronSpec,
-		Context:        o.Context,
 		StateSetter:    state,
 		Logger:         o.Logger,
 	})
+	if err != nil {
+		return err
+	}
+
+	watcher, err := agent.NewWatcher(agent.WatcherOptions{
+		Spec:    o.CronSpec,
+		Context: o.Context,
+		Logger:  o.Logger,
+	}, gardenerFn)
 	if err != nil {
 		return err
 	}
@@ -64,11 +71,11 @@ func run(o *options) error {
 	}
 
 	grpcServer := googlerpc.NewServer(googlerpc.EmptyServerOption{})
-	agentServer := gardener.NewServer(&gardener.ServerOption{
+	agentServer := agent.NewServer(&agent.ServerOption{
 		Getter: state,
 		Logger: o.Logger,
 	})
-	gardener_agent.RegisterAgentServer(grpcServer, agentServer)
+	cloud_agent.RegisterAgentServer(grpcServer, agentServer)
 
 	o.Logger.Info("starting grpc server")
 	return grpcServer.Serve(lis)
