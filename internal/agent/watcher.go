@@ -49,13 +49,13 @@ func NewWatcher(opts WatcherOption) (*cron.Cron, error) {
 	_, err = cron.AddFunc(spec, func() {
 		opts.Logger.Debug("watching for resources")
 		l, err := client.List(context, v1.ListOptions{})
+		opts.StateSetter.Set(l)
 		if err != nil {
 			opts.Logger.Errorf("when watching for shoots: %s", err.Error())
 			return
 		}
 
 		opts.Logger.Debugf("found %v shoots", len(l.Items))
-		opts.StateSetter.Set(l)
 	})
 
 	return cron, err

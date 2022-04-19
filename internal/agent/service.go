@@ -36,7 +36,7 @@ func NewServer(opts *ServerOption) gardener_agent.AgentServer {
 }
 
 func (s *server) Shoots(ctx context.Context, _ *gardener_agent.Empty) (*gardener_agent.ShootList, error) {
-	s.logger.Debug("handling reque")
+	s.logger.Debug("handling request")
 
 	state := s.getter.Get()
 	if state == nil {
