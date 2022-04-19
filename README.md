@@ -29,7 +29,7 @@ This application is created with a view to using it as [the tmux](https://github
 3. Check if program works by getting its logs:
 
     ```bash
-    tail /tmp/gardener-agent.stdout
+    tail /tmp/cloud-agent.stdout
     ```
 
 4. After waiting ~60 seconds for first iteration of the watcher you can get cluster state:
