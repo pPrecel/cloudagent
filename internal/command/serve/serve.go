@@ -1,9 +1,6 @@
 package serve
 
 import (
-	"net"
-	"os"
-
 	"github.com/pPrecel/cloud-agent/internal/agent"
 	cloud_agent "github.com/pPrecel/cloud-agent/internal/agent/proto"
 	"github.com/pPrecel/cloud-agent/internal/gardener"
@@ -32,12 +29,6 @@ func NewCmd(o *options) *cobra.Command {
 func run(o *options) error {
 	o.Logger.Info("starting gardeners agent")
 
-	o.Logger.Infof("removing old socket: '%s'", agent.Address)
-	err := os.RemoveAll(agent.Address)
-	if err != nil {
-		return err
-	}
-
 	state := &gardener.LastState{}
 
 	o.Logger.Infof("starting state watcher with spec: '%s'", o.CronSpec)
@@ -65,7 +56,7 @@ func run(o *options) error {
 	watcher.Start()
 
 	o.Logger.Debug("configuring grpc server")
-	lis, err := net.Listen(agent.Network, agent.Address)
+	lis, err := agent.NewSocket(agent.Network, agent.Address)
 	if err != nil {
 		return err
 	}

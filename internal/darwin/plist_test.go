@@ -43,7 +43,7 @@ func TestPlistBody(t *testing.T) {
 	<key>KeepAlive</key>
 	<true/>
 	<key>StandardOutPath</key>
-	<string>/tmp/cloud-agent.stdout</string>
+	<string>/tmp/cloudagent/cloudagent.stdout</string>
 </dict>
 </plist>`),
 		},
@@ -80,7 +80,7 @@ func TestPlistBody(t *testing.T) {
 	<key>KeepAlive</key>
 	<true/>
 	<key>StandardOutPath</key>
-	<string>/tmp/cloud-agent.stdout</string>
+	<string>/tmp/cloudagent/cloudagent.stdout</string>
 </dict>
 </plist>`),
 		},

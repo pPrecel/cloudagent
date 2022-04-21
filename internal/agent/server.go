@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	Address = "/tmp/cloud-agent.sock"
+	Address = "/tmp/cloudagent/cloudagent.sock"
 	Network = "unix"
 )
 
