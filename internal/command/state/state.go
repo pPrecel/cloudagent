@@ -2,65 +2,114 @@ package state
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/pPrecel/cloud-agent/internal/agent"
 	cloud_agent "github.com/pPrecel/cloud-agent/internal/agent/proto"
+	"github.com/pPrecel/cloud-agent/internal/output"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
+const (
+	createdByLabel        = `gardener.cloud/created-by`
+	escapedCreatedByLabel = `gardener\.cloud/created-by`
+)
+
 func NewCmd(o *options) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "state",
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return o.validate()
-		},
-		Run: func(_ *cobra.Command, _ []string) {
-			run(o)
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return run(o)
 		},
 	}
 
-	cmd.Flags().StringVarP(&o.CreatedBy, "createdBy", "c", "", "Provides filter argument for owned, hibernated and corrupted shoots.")
-	cmd.Flags().StringVarP(&o.OutFormat, "output-format", "o", "%d/%d/%d/%d", `Provides format for the output information. Must contains four '%d' elements where:
-	- first is number of running clusters, 
-	- second is number of hibernated clusters, 
-	- third is number of cluster with unknown status, 
-	- fourth is number of all cluster in namespace.`)
-	cmd.Flags().StringVarP(&o.ErrFormat, "error-format", "e", "ERR", "Provides format of output after occures an error.")
+	cmd.Flags().StringVarP(&o.CreatedBy, "createdBy", "c", "", "Show clusters created by specific person.")
+	cmd.Flags().VarP(output.New(&o.OutFormat, "table", "Shoots: %r/%h/%u/%a", "Error: %e"), "output", "o", `Provides format for the output information. 
+	
+For the 'text' output format you can specifie two more informations by spliting them using '='. The first one would be used as output format and second as error format.
+
+The first one can contains at least on out of four elements where:
+- '%r' represents number of running clusters, 
+- '%h' represents number of hibernated clusters, 
+- '%u' represents number of cluster with unknown status, 
+- '%a' represents of all cluster in namespace.
+
+The second one can contains '%e'  which will be replaced with error message.`)
 	cmd.Flags().DurationVarP(&o.Timeout, "timeout", "t", 2*time.Second, "Provides timeout for the command.")
 
 	return cmd
 }
 
-func run(o *options) {
+func run(o *options) error {
+	o.Logger.Debugf("getting shoots")
 	list, err := shootState(o)
-	if err != nil {
-		fmt.Print(o.ErrFormat)
-		return
-	}
 
-	hibernated := 0
-	corrupted := 0
-	healthy := 0
-	o.Logger.Debug("received %v items", len(list.Shoots))
-	for i := range list.Shoots {
-		o.Logger.Debug("%v - %+v", i, list.Shoots[i])
-		if !isCreatedBy(o.CreatedBy, list.Shoots[i]) {
-			continue
+	o.Logger.Debugf("received: %+v, error: %v", list, err)
+
+	return printOutput(o, list, err)
+}
+
+type tableFormat struct {
+	Name      string `header:"Name" json:"name"`
+	Owner     string `header:"Created By" json:"owner"`
+	Condition string `header:"Condition" json:"condition"`
+}
+
+func printOutput(o *options, s *cloud_agent.ShootList, e error) error {
+	w := os.Stdout
+
+	o.Logger.Debugf("printing shoots in format '%s'", o.OutFormat.String())
+	switch o.OutFormat.Type() {
+	case string(output.JsonType):
+		var f []string
+		if o.CreatedBy != "" {
+			f = append(f, fmt.Sprintf(`#(annotations.%s=="%s")#`, escapedCreatedByLabel, o.CreatedBy))
 		}
 
-		if list.Shoots[i].Condition == cloud_agent.Condition_HIBERNATED {
-			hibernated++
-		} else if list.Shoots[i].Condition == cloud_agent.Condition_UNKNOWN {
-			corrupted++
+		return output.PrintJson(w, s.Shoots, f...)
+	case string(output.TableType):
+		tab := []tableFormat{}
+
+		for i := range s.Shoots {
+			tab = append(tab, tableFormat{
+				Name:      s.Shoots[i].Name,
+				Owner:     s.Shoots[i].Annotations[createdByLabel],
+				Condition: s.Shoots[i].Condition.String(),
+			})
+		}
+
+		var f []string
+		if o.CreatedBy != "" {
+			f = append(f, fmt.Sprintf("#(owner==%s)#", o.CreatedBy))
+		}
+
+		return output.PrintTable(w, tab, f...)
+	case string(output.TextType):
+		if e != nil {
+			return output.PrintErrorText(w, output.ErrorOptions{
+				Format: o.OutFormat.ErrorFormat(),
+				Error:  e.Error(),
+			})
 		} else {
-			healthy++
+			var f []string
+			if o.CreatedBy != "" {
+				f = append(f, fmt.Sprintf(`#(annotations.%s=="%s")#`, escapedCreatedByLabel, o.CreatedBy))
+			}
+
+			return output.PrintText(w, s.Shoots, output.TextOptions{
+				Format: o.OutFormat.StringFormat(),
+				APath:  "#",
+				RPath:  `#(condition==0)#|#`,
+				HPath:  `#(condition==1)#|#`,
+				UPath:  `#(condition==2)#|#`,
+			}, f...)
 		}
 	}
 
-	fmt.Printf(o.OutFormat, healthy, hibernated, corrupted, len(list.Shoots))
+	return nil
 }
 
 func shootState(o *options) (*cloud_agent.ShootList, error) {
@@ -83,11 +132,4 @@ func shootState(o *options) (*cloud_agent.ShootList, error) {
 	}
 
 	return list, nil
-}
-
-func isCreatedBy(creator string, shoot *cloud_agent.Shoot) bool {
-	if shoot.Annotations["gardener.cloud/created-by"] == creator {
-		return true
-	}
-	return false
 }

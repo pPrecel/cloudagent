@@ -6,6 +6,11 @@ import (
 	"path/filepath"
 )
 
+const (
+	Address = "/tmp/cloudagent/cloudagent.sock"
+	Network = "unix"
+)
+
 func NewSocket(network, address string) (net.Listener, error) {
 	err := os.RemoveAll(address)
 	if err != nil {

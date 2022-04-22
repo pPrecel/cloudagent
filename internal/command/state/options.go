@@ -4,27 +4,20 @@ import (
 	"time"
 
 	"github.com/pPrecel/cloud-agent/internal/command"
-	"github.com/pkg/errors"
+	"github.com/pPrecel/cloud-agent/internal/output"
 )
 
 type options struct {
 	*command.Options
-	CreatedBy string
-	OutFormat string
-	ErrFormat string
-	Timeout   time.Duration
+	CreatedBy       string
+	StringOutFormat string
+	StringErrFormat string
+	OutFormat       output.Output
+	Timeout         time.Duration
 }
 
 func NewOptions(opts *command.Options) *options {
 	return &options{
 		Options: opts,
 	}
-}
-
-func (o *options) validate() error {
-	if o.CreatedBy == "" {
-		return errors.New("createdBy should not be empty")
-	}
-
-	return nil
 }

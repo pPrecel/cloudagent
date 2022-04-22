@@ -9,11 +9,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const (
-	Address = "/tmp/cloudagent/cloudagent.sock"
-	Network = "unix"
-)
-
 var _ cloud_agent.AgentServer = &server{}
 
 type StateGetter interface {
