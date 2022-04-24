@@ -21,8 +21,8 @@ go vet ./...
 echo "<==(      OK      )==="
 echo ""
 
-echo ">==( go test ./... )==="
-go test ./...
+echo ">==( go test --cover --race ./... )==="
+go test --cover --race ./...
 echo "<==(      OK       )==="
 echo ""
 

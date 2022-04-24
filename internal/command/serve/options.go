@@ -1,36 +1,43 @@
 package serve
 
 import (
-	"path/filepath"
-
+	"github.com/pPrecel/cloud-agent/internal/agent"
 	"github.com/pPrecel/cloud-agent/internal/command"
+	"github.com/pPrecel/cloud-agent/internal/gardener"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"k8s.io/client-go/rest"
 )
 
 type options struct {
 	*command.Options
-	KubeconfigPath string
-	Namespace      string
-	CronSpec       string
+
+	kubeconfigPath string
+	namespace      string
+	cronSpec       string
+
+	socketAddress    string
+	socketNetwork    string
+	newClusterConfig func(string) (*rest.Config, error)
+	newWatchFunc     func(l *logrus.Logger, c gardener.Client, s gardener.StateSetter) agent.WatchFn
 }
 
 func NewOptions(opts *command.Options) *options {
 	return &options{
-		Options: opts,
+		Options:          opts,
+		socketAddress:    agent.Address,
+		socketNetwork:    agent.Network,
+		newClusterConfig: gardener.NewClusterConfig,
+		newWatchFunc:     gardener.NewWatchFunc,
 	}
 }
 
 func (o *options) validate() error {
-	if !filepath.IsAbs(o.KubeconfigPath) {
-		path, err := filepath.Abs(o.KubeconfigPath)
-		if err != nil {
-			return errors.Wrap(err, "kubeconfigPath should not be empty")
-		}
-
-		o.KubeconfigPath = path
+	if o.kubeconfigPath == "" {
+		return errors.New("kubeconfigPath should not be empty")
 	}
 
-	if o.Namespace == "" {
+	if o.namespace == "" {
 		return errors.New("namespace should not be empty")
 	}
 

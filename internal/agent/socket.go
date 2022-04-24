@@ -17,7 +17,7 @@ func NewSocket(network, address string) (net.Listener, error) {
 		return nil, err
 	}
 
-	err = os.MkdirAll(filepath.Dir(address), os.ModePerm)
+	err = os.MkdirAll(filepath.Dir(address), os.ModeSocket)
 	if err != nil {
 		return nil, err
 	}

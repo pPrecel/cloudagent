@@ -7,8 +7,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const defaultSpec = "@every 15m"
-
 type WatchFn func(context.Context)
 
 type WatcherOptions struct {
@@ -19,10 +17,6 @@ type WatcherOptions struct {
 
 func NewWatcher(opts WatcherOptions, fn ...WatchFn) (*cron.Cron, error) {
 	cron := cron.New()
-	spec := defaultSpec
-	if opts.Spec != "" {
-		spec = opts.Spec
-	}
 
 	context := context.Background()
 	if opts.Context != nil {
@@ -30,7 +24,7 @@ func NewWatcher(opts WatcherOptions, fn ...WatchFn) (*cron.Cron, error) {
 	}
 
 	for i := range fn {
-		_, err := cron.AddFunc(spec, func() {
+		_, err := cron.AddFunc(opts.Spec, func() {
 			fn[i](context)
 		})
 		if err != nil {

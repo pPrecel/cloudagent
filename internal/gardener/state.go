@@ -19,8 +19,9 @@ type LastState struct {
 
 func (s *LastState) Set(shoots *v1beta1.ShootList) {
 	s.m.Lock()
+	defer s.m.Unlock()
+
 	s.v = shoots
-	s.m.Unlock()
 }
 
 func (s *LastState) Get() *v1beta1.ShootList {

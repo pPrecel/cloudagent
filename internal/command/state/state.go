@@ -2,10 +2,8 @@ package state
 
 import (
 	"fmt"
-	"os"
 	"time"
 
-	"github.com/pPrecel/cloud-agent/internal/agent"
 	cloud_agent "github.com/pPrecel/cloud-agent/internal/agent/proto"
 	"github.com/pPrecel/cloud-agent/internal/output"
 	"github.com/spf13/cobra"
@@ -26,8 +24,8 @@ func NewCmd(o *options) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&o.CreatedBy, "createdBy", "c", "", "Show clusters created by specific person.")
-	cmd.Flags().VarP(output.New(&o.OutFormat, "table", "Shoots: %r/%h/%u/%a", "Error: %e"), "output", "o", `Provides format for the output information. 
+	cmd.Flags().StringVarP(&o.createdBy, "createdBy", "c", "", "Show clusters created by specific person.")
+	cmd.Flags().VarP(output.New(&o.outFormat, "table", "%r/%h/%u/%a", "-/-/-/-"), "output", "o", `Provides format for the output information. 
 	
 For the 'text' output format you can specifie two more informations by spliting them using '='. The first one would be used as output format and second as error format.
 
@@ -38,7 +36,7 @@ The first one can contains at least on out of four elements where:
 - '%a' represents of all cluster in namespace.
 
 The second one can contains '%e'  which will be replaced with error message.`)
-	cmd.Flags().DurationVarP(&o.Timeout, "timeout", "t", 2*time.Second, "Provides timeout for the command.")
+	cmd.Flags().DurationVarP(&o.timeout, "timeout", "t", 2*time.Second, "Provides timeout for the command.")
 
 	return cmd
 }
@@ -59,14 +57,17 @@ type tableFormat struct {
 }
 
 func printOutput(o *options, s *cloud_agent.ShootList, e error) error {
-	w := os.Stdout
+	if s == nil {
+		s = &cloud_agent.ShootList{}
+	}
+	w := o.writer
 
-	o.Logger.Debugf("printing shoots in format '%s'", o.OutFormat.String())
-	switch o.OutFormat.Type() {
+	o.Logger.Debugf("printing shoots in format '%s'", o.outFormat.String())
+	switch o.outFormat.Type() {
 	case string(output.JsonType):
 		var f []string
-		if o.CreatedBy != "" {
-			f = append(f, fmt.Sprintf(`#(annotations.%s=="%s")#`, escapedCreatedByLabel, o.CreatedBy))
+		if o.createdBy != "" {
+			f = append(f, fmt.Sprintf(`#(annotations.%s=="%s")#`, escapedCreatedByLabel, o.createdBy))
 		}
 
 		return output.PrintJson(w, s.Shoots, f...)
@@ -82,25 +83,25 @@ func printOutput(o *options, s *cloud_agent.ShootList, e error) error {
 		}
 
 		var f []string
-		if o.CreatedBy != "" {
-			f = append(f, fmt.Sprintf("#(owner==%s)#", o.CreatedBy))
+		if o.createdBy != "" {
+			f = append(f, fmt.Sprintf("#(owner==%s)#", o.createdBy))
 		}
 
 		return output.PrintTable(w, tab, f...)
 	case string(output.TextType):
 		if e != nil {
 			return output.PrintErrorText(w, output.ErrorOptions{
-				Format: o.OutFormat.ErrorFormat(),
+				Format: o.outFormat.ErrorFormat(),
 				Error:  e.Error(),
 			})
 		} else {
 			var f []string
-			if o.CreatedBy != "" {
-				f = append(f, fmt.Sprintf(`#(annotations.%s=="%s")#`, escapedCreatedByLabel, o.CreatedBy))
+			if o.createdBy != "" {
+				f = append(f, fmt.Sprintf(`#(annotations.%s=="%s")#`, escapedCreatedByLabel, o.createdBy))
 			}
 
 			return output.PrintText(w, s.Shoots, output.TextOptions{
-				Format: o.OutFormat.StringFormat(),
+				Format: o.outFormat.StringFormat(),
 				APath:  "#",
 				RPath:  `#(condition==0)#|#`,
 				HPath:  `#(condition==1)#|#`,
@@ -114,14 +115,14 @@ func printOutput(o *options, s *cloud_agent.ShootList, e error) error {
 
 func shootState(o *options) (*cloud_agent.ShootList, error) {
 	o.Logger.Debug("creating grpc client")
-	conn, err := grpc.Dial(fmt.Sprintf("%s://%s", agent.Network, agent.Address), grpc.WithInsecure())
+	conn, err := grpc.Dial(fmt.Sprintf("%s://%s", o.socketNetwork, o.socketAddress), grpc.WithInsecure())
 	if err != nil {
 		o.Logger.Debugf("fail to dial: %v", err)
 		return nil, err
 	}
 	defer conn.Close()
 
-	ctx, cancel := context.WithTimeout(o.Context, o.Timeout)
+	ctx, cancel := context.WithTimeout(o.Context, o.timeout)
 	defer cancel()
 
 	o.Logger.Debug("sending request")

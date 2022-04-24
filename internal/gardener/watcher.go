@@ -3,42 +3,28 @@ package gardener
 import (
 	"context"
 
+	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloud-agent/internal/agent"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type WatchOptions struct {
-	KubeconfigPath string
-	Namespace      string
-	StateSetter    StateSetter
-	Logger         *logrus.Logger
+//go:generate mockery --name=Client --output=automock --outpkg=automock
+type Client interface {
+	List(context.Context, v1.ListOptions) (*v1beta1.ShootList, error)
 }
 
-func NewWatchFunc(opts WatchOptions) (agent.WatchFn, error) {
-	opts.Logger.Debug("creating cluster config")
-	cfg, err := newClusterConfig(opts.KubeconfigPath)
-	if err != nil {
-		return nil, err
-	}
-
-	opts.Logger.Debug("creating gardener client")
-	c, err := newClient(cfg)
-	if err != nil {
-		return nil, err
-	}
-	client := c.Shoots(opts.Namespace)
-
-	opts.Logger.Debug("setting up watchers func")
+func NewWatchFunc(l *logrus.Logger, c Client, s StateSetter) agent.WatchFn {
+	l.Debug("setting up watchers func")
 	return func(context context.Context) {
-		opts.Logger.Debug("watching for resources")
-		l, err := client.List(context, v1.ListOptions{})
-		opts.StateSetter.Set(l)
+		l.Debug("watching for resources")
+		list, err := c.List(context, v1.ListOptions{})
+		s.Set(list)
 		if err != nil {
-			opts.Logger.Errorf("when watching for shoots: %s", err.Error())
+			l.Errorf("when watching for shoots: %s", err.Error())
 			return
 		}
 
-		opts.Logger.Debugf("found %v shoots", len(l.Items))
-	}, nil
+		l.Debugf("found %v shoots", len(list.Items))
+	}
 }

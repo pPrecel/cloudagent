@@ -11,6 +11,7 @@ import (
 
 var _ cloud_agent.AgentServer = &server{}
 
+//go:generate mockery --name=StateGetter --output=automock --outpkg=automock
 type StateGetter interface {
 	Get() *v1beta1.ShootList
 }

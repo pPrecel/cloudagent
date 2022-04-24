@@ -19,9 +19,9 @@ func NewCmd(o *options) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&o.KubeconfigPath, "kubeconfigPath", "k", "", "Provides path to kubeconfig.")
-	cmd.Flags().StringVarP(&o.Namespace, "namespace", "n", "", "Provides gardener namespace.")
-	cmd.Flags().StringVarP(&o.CronSpec, "cronSpec", "c", "@every 15m", "Provices spec for cron configuration.")
+	cmd.Flags().StringVarP(&o.kubeconfigPath, "kubeconfigPath", "k", "", "Provides path to kubeconfig.")
+	cmd.Flags().StringVarP(&o.namespace, "namespace", "n", "", "Provides gardener namespace.")
+	cmd.Flags().StringVarP(&o.cronSpec, "cronSpec", "c", "@every 15m", "Provices spec for cron configuration.")
 
 	return cmd
 }
@@ -29,21 +29,25 @@ func NewCmd(o *options) *cobra.Command {
 func run(o *options) error {
 	o.Logger.Info("starting gardeners agent")
 
-	state := &gardener.LastState{}
-
-	o.Logger.Infof("starting state watcher with spec: '%s'", o.CronSpec)
-	gardenerFn, err := gardener.NewWatchFunc(gardener.WatchOptions{
-		KubeconfigPath: o.KubeconfigPath,
-		Namespace:      o.Namespace,
-		StateSetter:    state,
-		Logger:         o.Logger,
-	})
+	o.Logger.Debug("creating cluster config")
+	cfg, err := o.newClusterConfig(o.kubeconfigPath)
 	if err != nil {
 		return err
 	}
 
+	o.Logger.Debug("creating gardener client")
+	c, err := gardener.NewClient(cfg)
+	if err != nil {
+		return err
+	}
+
+	state := &gardener.LastState{}
+
+	o.Logger.Infof("starting state watcher with spec: '%s'", o.cronSpec)
+	gardenerFn := o.newWatchFunc(o.Logger, c.Shoots(o.namespace), state)
+
 	watcher, err := agent.NewWatcher(agent.WatcherOptions{
-		Spec:    o.CronSpec,
+		Spec:    o.cronSpec,
 		Context: o.Context,
 		Logger:  o.Logger,
 	}, gardenerFn)
@@ -56,7 +60,7 @@ func run(o *options) error {
 	watcher.Start()
 
 	o.Logger.Debug("configuring grpc server")
-	lis, err := agent.NewSocket(agent.Network, agent.Address)
+	lis, err := agent.NewSocket(o.socketNetwork, o.socketAddress)
 	if err != nil {
 		return err
 	}
