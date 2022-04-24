@@ -56,5 +56,5 @@ This application is created with a view to using it as [the tmux](https://github
 To add this application to tmux put line below in the `~/.tmux.conf` file:
 
 ```text
-set -ag status-right ' #(cloudagent state --createdBy <OWNER_NAME>) '
+set -ag status-right ' #(cloudagent state --createdBy <OWNER_NAME> -o text) '
 ```
