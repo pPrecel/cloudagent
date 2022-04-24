@@ -26,12 +26,6 @@ func TestNewSocket(t *testing.T) {
 		assert.False(t, f.IsDir())
 	})
 
-	t.Run("empty address", func(t *testing.T) {
-		l, e := NewSocket(Network, "")
-		assert.Error(t, e)
-		assert.Nil(t, l)
-	})
-
 	t.Run("removing error", func(t *testing.T) {
 		l, e := NewSocket(Network, ".")
 		assert.Error(t, e)
