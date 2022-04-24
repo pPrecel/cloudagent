@@ -1,5 +1,8 @@
 # Cloud Agent
 
+[![license](https://img.shields.io/badge/License-MIT-brightgreen.svg?style=for-the-badge)](https://github.com/pPrecel/cloud-agent/blob/main/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/pPrecel/cloud-agent?style=for-the-badge)](https://goreportcard.com/report/github.com/pPrecel/cloud-agent)
+
 The simple and easy-to-use program designed to watch user activity and possible orphan clusters for Cloud Providers:
 
 - Gardener
