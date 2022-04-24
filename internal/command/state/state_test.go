@@ -26,7 +26,7 @@ func TestNewCmd(t *testing.T) {
 
 	t.Run("defaults", func(t *testing.T) {
 		assert.Equal(t, "", o.createdBy)
-		assert.Equal(t, *output.New(&output.Output{}, "table", "Shoots: %r/%h/%u/%a", "Error: %e"), o.outFormat)
+		assert.Equal(t, *output.New(&output.Output{}, "table", "%r/%h/%u/%a", "-/-/-/-"), o.outFormat)
 		assert.Equal(t, 2*time.Second, o.timeout)
 	})
 
