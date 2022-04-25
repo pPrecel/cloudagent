@@ -23,7 +23,8 @@ message Shoot {
 }
 
 enum Condition {
-    HEALTHY = 0;
-    HIBERNATED = 1;
-    UNKNOWN = 2;
+    EMPTY = 0;
+    HEALTHY = 1;
+    HIBERNATED = 2;
+    UNKNOWN = 3;
   }

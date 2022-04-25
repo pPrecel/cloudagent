@@ -43,6 +43,13 @@ var (
 						"annotation2": "val2",
 					},
 				},
+				Status: v1beta1.ShootStatus{
+					Conditions: []v1beta1.Condition{
+						{
+							Status: v1beta1.ConditionTrue,
+						},
+					},
+				},
 			},
 			{
 				ObjectMeta: v1.ObjectMeta{

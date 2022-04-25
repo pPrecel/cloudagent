@@ -103,9 +103,9 @@ func printOutput(o *options, s *cloud_agent.ShootList, e error) error {
 			return output.PrintText(w, s.Shoots, output.TextOptions{
 				Format: o.outFormat.StringFormat(),
 				APath:  "#",
-				RPath:  `#(condition==0)#|#`,
-				HPath:  `#(condition==1)#|#`,
-				UPath:  `#(condition==2)#|#`,
+				RPath:  `#(condition==1)#|#`,
+				HPath:  `#(condition==2)#|#`,
+				UPath:  `#(condition==3)#|#`,
 			}, f...)
 		}
 	}

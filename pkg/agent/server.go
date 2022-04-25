@@ -51,6 +51,8 @@ func (s *server) GardenerShoots(ctx context.Context, _ *cloud_agent.Empty) (*clo
 			cond = cloud_agent.Condition_HIBERNATED
 		} else if isConditionUnknown(item) {
 			cond = cloud_agent.Condition_UNKNOWN
+		} else if len(item.Status.Conditions) == 0 {
+			cond = cloud_agent.Condition_EMPTY
 		}
 
 		list.Shoots = append(list.Shoots, &cloud_agent.Shoot{
