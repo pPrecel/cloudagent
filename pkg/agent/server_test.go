@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	"github.com/pPrecel/cloud-agent/internal/agent/automock"
-	cloud_agent "github.com/pPrecel/cloud-agent/internal/agent/proto"
+	"github.com/pPrecel/cloud-agent/pkg/agent/automock"
+	cloud_agent "github.com/pPrecel/cloud-agent/pkg/agent/proto"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

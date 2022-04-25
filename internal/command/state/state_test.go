@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	"github.com/pPrecel/cloud-agent/internal/agent"
-	cloud_agent "github.com/pPrecel/cloud-agent/internal/agent/proto"
 	"github.com/pPrecel/cloud-agent/internal/command"
 	"github.com/pPrecel/cloud-agent/internal/gardener"
 	"github.com/pPrecel/cloud-agent/internal/output"
+	"github.com/pPrecel/cloud-agent/pkg/agent"
+	cloud_agent "github.com/pPrecel/cloud-agent/pkg/agent/proto"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	googlerpc "google.golang.org/grpc"

@@ -1,9 +1,9 @@
 package serve
 
 import (
-	"github.com/pPrecel/cloud-agent/internal/agent"
-	cloud_agent "github.com/pPrecel/cloud-agent/internal/agent/proto"
 	"github.com/pPrecel/cloud-agent/internal/gardener"
+	"github.com/pPrecel/cloud-agent/pkg/agent"
+	cloud_agent "github.com/pPrecel/cloud-agent/pkg/agent/proto"
 	"github.com/spf13/cobra"
 	googlerpc "google.golang.org/grpc"
 )

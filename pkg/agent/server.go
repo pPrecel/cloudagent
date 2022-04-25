@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	cloud_agent "github.com/pPrecel/cloud-agent/internal/agent/proto"
+	cloud_agent "github.com/pPrecel/cloud-agent/pkg/agent/proto"
 	"github.com/sirupsen/logrus"
 )
 

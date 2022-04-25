@@ -1,9 +1,9 @@
 package serve
 
 import (
-	"github.com/pPrecel/cloud-agent/internal/agent"
 	"github.com/pPrecel/cloud-agent/internal/command"
 	"github.com/pPrecel/cloud-agent/internal/gardener"
+	"github.com/pPrecel/cloud-agent/pkg/agent"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"

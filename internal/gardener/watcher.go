@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	"github.com/pPrecel/cloud-agent/internal/agent"
+	"github.com/pPrecel/cloud-agent/pkg/agent"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pPrecel/cloud-agent/internal/agent"
 	"github.com/pPrecel/cloud-agent/internal/command"
 	"github.com/pPrecel/cloud-agent/internal/gardener"
+	"github.com/pPrecel/cloud-agent/pkg/agent"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	cloud_agent "github.com/pPrecel/cloud-agent/internal/agent/proto"
 	"github.com/pPrecel/cloud-agent/internal/output"
+	cloud_agent "github.com/pPrecel/cloud-agent/pkg/agent/proto"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
