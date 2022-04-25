@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         platform: [macos-latest, ubuntu-latest]
-    runs-on: ${{ matrix.go-version }}
+    runs-on: ${{ matrix.platform }}
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-go@v3
