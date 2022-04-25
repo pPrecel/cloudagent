@@ -1,37 +1,22 @@
-name: build
-
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
+name: build
 jobs:
-
-  build-linux:
-    runs-on: ubuntu-latest
+  build:
+    strategy:
+      matrix:
+        platform: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.go-version }}
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-go@v3
       with:
         go-version: 1.18
-    
     - name: Verify
       run: make verify
-
-    - name: Build
-      run: make build
-    
-  build-macos:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3
-      with:
-        go-version: 1.18
-    
-    - name: Verify
-      run: make verify
-
     - name: Build
       run: make build
