@@ -5,7 +5,7 @@ CURRENT_DIR = $(shell pwd)
 
 .PHONY: build
 build:
-	go build -o .out/cloudagent cmd/main.go
+	go build -o .out/cloudagent main.go
 
 .PHONY: cp-to-path
 cp-to-path:
