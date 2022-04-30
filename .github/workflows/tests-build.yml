@@ -6,18 +6,22 @@ on:
 
 name: build
 jobs:
+
   build:
     strategy:
       matrix:
         platform: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.platform }}
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3
+    - 
+      uses: actions/checkout@v3
+    - 
+      uses: actions/setup-go@v3
       with:
         go-version: 1.18
-
-    - name: Verify
+    - 
+      name: Verify
       run: make verify
-    - name: Build
+    - 
+      name: Build
       run: make build
