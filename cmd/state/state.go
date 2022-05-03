@@ -1,6 +1,7 @@
 package state
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -89,6 +90,10 @@ func printOutput(o *options, s *cloud_agent.ShootList, e error) error {
 
 		return output.PrintTable(w, tab, f...)
 	case string(output.TextType):
+		if e == nil && len(s.Shoots) == 0 {
+			e = errors.New("empty shoot list")
+		}
+
 		if e != nil {
 			return output.PrintErrorText(w, output.ErrorOptions{
 				Format: o.outFormat.ErrorFormat(),

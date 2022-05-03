@@ -81,11 +81,40 @@ func Test_run(t *testing.T) {
 		}
 		cmd := NewCmd(o)
 		o.createdBy = "owner"
+		o.outFormat = *output.New(&o.outFormat, output.TextType, "%r/%h/%u/%a", "-/-/-/-")
 
 		r.Set(&v1beta1.ShootList{
 			Items: []v1beta1.Shoot{
 				{}, {}, {},
 			},
+		})
+
+		err = cmd.RunE(cmd, []string{})
+		assert.NoError(t, err)
+	})
+
+	t.Run("run and print text error", func(t *testing.T) {
+		c := agent.NewCache[*v1beta1.ShootList]()
+		r := c.Register("test-data")
+		stopFn, err := fixServer(l, c)
+		assert.NoError(t, err)
+		defer stopFn()
+
+		o := &options{
+			socketAddress: socketAddress,
+			socketNetwork: socketNetwork,
+			writer:        io.Discard,
+			Options: &command.Options{
+				Logger:  l,
+				Context: context.Background(),
+			},
+		}
+		cmd := NewCmd(o)
+		o.createdBy = "owner"
+		o.outFormat = *output.New(&o.outFormat, output.TextType, "", "-/-/-/-")
+
+		r.Set(&v1beta1.ShootList{
+			Items: []v1beta1.Shoot{},
 		})
 
 		err = cmd.RunE(cmd, []string{})
@@ -140,7 +169,7 @@ func Test_run(t *testing.T) {
 		}
 		cmd := NewCmd(o)
 		o.createdBy = "owner"
-		o.outFormat = *output.New(&o.outFormat, output.TextType, "%a", "%e")
+		o.outFormat = *output.New(&o.outFormat, output.TableType, "%a", "%e")
 
 		r.Set(&v1beta1.ShootList{
 			Items: []v1beta1.Shoot{
