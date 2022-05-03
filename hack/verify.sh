@@ -21,10 +21,11 @@ go vet ./...
 echo "<==(      OK      )==="
 echo ""
 
-echo ">==( go test --cover --race ./... )==="
-go test --cover --race ./...
+echo ">==( go test --cover --race -timeout 30s ./... )==="
+go test --cover --race -timeout 30s ./...
 echo "<==(      OK       )==="
 echo ""
 
 echo ">==( protobuf verify )==="
+# TODO: not implemented
 echo "not implemented..."

@@ -3,10 +3,12 @@ package gardener
 import (
 	"context"
 	"errors"
+	"io/ioutil"
 	"testing"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloud-agent/internal/gardener/automock"
+	"github.com/pPrecel/cloud-agent/pkg/agent"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -39,9 +41,10 @@ var (
 )
 
 func TestNewWatchFunc(t *testing.T) {
+	l := logrus.New()
+	l.Out = ioutil.Discard
 
 	type args struct {
-		l *logrus.Logger
 		c Client
 	}
 	tests := []struct {
@@ -52,7 +55,6 @@ func TestNewWatchFunc(t *testing.T) {
 		{
 			name: "watch resources",
 			args: args{
-				l: logrus.New(),
 				c: func() Client {
 					c := automock.NewClient(t)
 					c.On("List", mock.Anything, v1.ListOptions{}).Return(shootList, nil).Once()
@@ -65,7 +67,6 @@ func TestNewWatchFunc(t *testing.T) {
 		{
 			name: "list error",
 			args: args{
-				l: logrus.New(),
 				c: func() Client {
 					c := automock.NewClient(t)
 					c.On("List", mock.Anything, v1.ListOptions{}).Return(nil, errors.New("new error")).Once()
@@ -78,11 +79,12 @@ func TestNewWatchFunc(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &LastState{}
-			got := NewWatchFunc(tt.args.l, tt.args.c, s)
+			c := agent.NewCache[*v1beta1.ShootList]()
+			r := c.Register("test-data")
+			got := NewWatchFunc(l, tt.args.c, r)
 
 			got(context.Background())
-			assert.Equal(t, tt.want, s.Get())
+			assert.Equal(t, tt.want, r.Get())
 		})
 	}
 }

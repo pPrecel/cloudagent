@@ -1,0 +1,9 @@
+persistentSpec: "@every 2s"
+gardenerProjects:
+- namespace: "n1"
+  kubeconfigPath: "k1"
+- namespace: "n2"
+  kubeconfigPath: "k2"
+- namespace: "n3"
+  kubeconfigPath: "k3"
+gcpProjects: []

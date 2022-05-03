@@ -3,11 +3,12 @@ module github.com/pPrecel/cloud-agent
 go 1.18
 
 require (
-	github.com/gardener/gardener v1.44.3
+	github.com/gardener/gardener v1.45.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.4.0
 	google.golang.org/grpc v1.45.0
 	google.golang.org/protobuf v1.27.1
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	k8s.io/apimachinery v0.23.6
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 )
@@ -21,7 +22,6 @@ require (
 	github.com/stretchr/objx v0.1.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
 
 require (
@@ -65,8 +65,6 @@ replace (
 	// NOTE: some dependencies require old style client-go version k8s.io/client-go@v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	// github.com/gardener/hvpa-controller, github.com/kyma-project/kyma/components/compass-runtime-agent, github.com/kyma-project/control-plane/components/provisioner, github.com/gardener/gardener
 	k8s.io/api => k8s.io/api v0.23.4
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.19.12
 	k8s.io/apimachinery => k8s.io/apimachinery v0.23.4
 	k8s.io/client-go => k8s.io/client-go v0.23.4
-	k8s.io/kubectl => k8s.io/kubectl v0.23.4
 )

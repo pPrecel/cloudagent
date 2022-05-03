@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	"github.com/pPrecel/cloud-agent/pkg/agent/automock"
 	cloud_agent "github.com/pPrecel/cloud-agent/pkg/agent/proto"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -108,8 +107,8 @@ var (
 
 func Test_server_GardenerShoots(t *testing.T) {
 	type fields struct {
-		getter StateGetter
-		logger *logrus.Logger
+		gardenerCache Cache[*v1beta1.ShootList]
+		logger        *logrus.Logger
 	}
 	tests := []struct {
 		name    string
@@ -120,13 +119,8 @@ func Test_server_GardenerShoots(t *testing.T) {
 		{
 			name: "empty state list",
 			fields: fields{
-				getter: func() StateGetter {
-					m := automock.NewStateGetter(t)
-					m.On("Get").Return(&v1beta1.ShootList{}).Once()
-
-					return m
-				}(),
-				logger: logrus.New(),
+				gardenerCache: fixShootListCache(&v1beta1.ShootList{}),
+				logger:        logrus.New(),
 			},
 			want:    &cloud_agent.ShootList{},
 			wantErr: false,
@@ -134,13 +128,8 @@ func Test_server_GardenerShoots(t *testing.T) {
 		{
 			name: "state list",
 			fields: fields{
-				getter: func() StateGetter {
-					m := automock.NewStateGetter(t)
-					m.On("Get").Return(testGardenerShootList).Once()
-
-					return m
-				}(),
-				logger: logrus.New(),
+				gardenerCache: fixShootListCache(testGardenerShootList),
+				logger:        logrus.New(),
 			},
 			want:    testAgentShootList,
 			wantErr: false,
@@ -148,13 +137,17 @@ func Test_server_GardenerShoots(t *testing.T) {
 		{
 			name: "nil state list",
 			fields: fields{
-				getter: func() StateGetter {
-					m := automock.NewStateGetter(t)
-					m.On("Get").Return(nil).Once()
-
-					return m
-				}(),
-				logger: logrus.New(),
+				gardenerCache: fixShootListCache(nil),
+				logger:        logrus.New(),
+			},
+			want:    &cloud_agent.ShootList{},
+			wantErr: false,
+		},
+		{
+			name: "nil cache",
+			fields: fields{
+				gardenerCache: nil,
+				logger:        logrus.New(),
 			},
 			want:    nil,
 			wantErr: true,
@@ -163,8 +156,8 @@ func Test_server_GardenerShoots(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := NewServer(&ServerOption{
-				Getter: tt.fields.getter,
-				Logger: tt.fields.logger,
+				GardenerCache: tt.fields.gardenerCache,
+				Logger:        tt.fields.logger,
 			})
 			got, err := s.GardenerShoots(context.Background(), &cloud_agent.Empty{})
 			if (err != nil) != tt.wantErr {
@@ -176,4 +169,13 @@ func Test_server_GardenerShoots(t *testing.T) {
 			}
 		})
 	}
+}
+
+func fixShootListCache(s *v1beta1.ShootList) Cache[*v1beta1.ShootList] {
+	c := NewCache[*v1beta1.ShootList]()
+
+	r := c.Register("test")
+	r.Set(s)
+
+	return c
 }

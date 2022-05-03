@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/pPrecel/cloud-agent/internal/command"
+	command "github.com/pPrecel/cloud-agent/cmd"
 	"github.com/pPrecel/cloud-agent/internal/output"
 	"github.com/pPrecel/cloud-agent/pkg/agent"
 )

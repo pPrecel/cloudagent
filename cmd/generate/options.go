@@ -5,16 +5,14 @@ import (
 	"io"
 	"os"
 
-	"github.com/pPrecel/cloud-agent/internal/command"
+	command "github.com/pPrecel/cloud-agent/cmd"
 )
 
 type options struct {
 	*command.Options
 
-	kubeconfigPath string
-	namespace      string
-	cronSpec       string
-	agentVerbose   bool
+	configPath   string
+	agentVerbose bool
 
 	executable func() (string, error)
 	stdout     io.Writer
@@ -29,12 +27,8 @@ func NewOptions(o *command.Options) *options {
 }
 
 func (o *options) validate() error {
-	if o.kubeconfigPath == "" {
-		return errors.New("kubeconfigPath should not be empty")
-	}
-
-	if o.namespace == "" {
-		return errors.New("namespace should not be empty")
+	if o.configPath == "" {
+		return errors.New("configPath should not be empty")
 	}
 
 	return nil

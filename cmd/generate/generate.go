@@ -2,6 +2,7 @@ package generate
 
 import (
 	"github.com/pPrecel/cloud-agent/internal/darwin"
+	"github.com/pPrecel/cloud-agent/pkg/config"
 	"github.com/spf13/cobra"
 )
 
@@ -21,9 +22,7 @@ func NewCmd(o *options) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&o.kubeconfigPath, "kubeconfigPath", "k", "", "Provides path to kubeconfig.")
-	cmd.Flags().StringVarP(&o.namespace, "namespace", "n", "", "Provides gardener namespace.")
-	cmd.Flags().StringVarP(&o.cronSpec, "cronSpec", "c", "@every 60s", "Provices spec for cron configuration.")
+	cmd.Flags().StringVarP(&o.configPath, "configPath", "c", config.ConfigPath, "Provides path to the config file.")
 	cmd.PersistentFlags().BoolVar(&o.agentVerbose, "agentVerbose", false, "Displays details of actions triggered by the command.")
 
 	return cmd
@@ -33,12 +32,7 @@ func run(o *options) error {
 	o.Logger.Debug("starting command")
 
 	args := []string{}
-	args = append(args, "--kubeconfigPath", o.kubeconfigPath)
-	args = append(args, "--namespace", o.namespace)
-
-	if o.cronSpec != "" {
-		args = append(args, "--cronSpec", o.cronSpec)
-	}
+	args = append(args, "--configPath", o.configPath)
 
 	if o.agentVerbose {
 		args = append(args, "--verbose")

@@ -10,8 +10,7 @@ import (
 	"time"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	"github.com/pPrecel/cloud-agent/internal/command"
-	"github.com/pPrecel/cloud-agent/internal/gardener"
+	command "github.com/pPrecel/cloud-agent/cmd"
 	"github.com/pPrecel/cloud-agent/internal/output"
 	"github.com/pPrecel/cloud-agent/pkg/agent"
 	cloud_agent "github.com/pPrecel/cloud-agent/pkg/agent/proto"
@@ -65,8 +64,9 @@ func Test_run(t *testing.T) {
 	l.Out = ioutil.Discard
 
 	t.Run("run and print text", func(t *testing.T) {
-		s := &gardener.LastState{}
-		stopFn, err := fixServer(l, s)
+		c := agent.NewCache[*v1beta1.ShootList]()
+		r := c.Register("test-data")
+		stopFn, err := fixServer(l, c)
 		assert.NoError(t, err)
 		defer stopFn()
 
@@ -82,7 +82,7 @@ func Test_run(t *testing.T) {
 		cmd := NewCmd(o)
 		o.createdBy = "owner"
 
-		s.Set(&v1beta1.ShootList{
+		r.Set(&v1beta1.ShootList{
 			Items: []v1beta1.Shoot{
 				{}, {}, {},
 			},
@@ -93,8 +93,9 @@ func Test_run(t *testing.T) {
 	})
 
 	t.Run("run and print json", func(t *testing.T) {
-		s := &gardener.LastState{}
-		stopFn, err := fixServer(l, s)
+		c := agent.NewCache[*v1beta1.ShootList]()
+		r := c.Register("test-data")
+		stopFn, err := fixServer(l, c)
 		assert.NoError(t, err)
 		defer stopFn()
 
@@ -111,7 +112,7 @@ func Test_run(t *testing.T) {
 		o.createdBy = "owner"
 		o.outFormat = *output.New(&o.outFormat, output.JsonType, "", "")
 
-		s.Set(&v1beta1.ShootList{
+		r.Set(&v1beta1.ShootList{
 			Items: []v1beta1.Shoot{
 				{}, {}, {},
 			},
@@ -122,8 +123,9 @@ func Test_run(t *testing.T) {
 	})
 
 	t.Run("run and print table", func(t *testing.T) {
-		s := &gardener.LastState{}
-		stopFn, err := fixServer(l, s)
+		c := agent.NewCache[*v1beta1.ShootList]()
+		r := c.Register("test-data")
+		stopFn, err := fixServer(l, c)
 		assert.NoError(t, err)
 		defer stopFn()
 
@@ -140,7 +142,7 @@ func Test_run(t *testing.T) {
 		o.createdBy = "owner"
 		o.outFormat = *output.New(&o.outFormat, output.TextType, "%a", "%e")
 
-		s.Set(&v1beta1.ShootList{
+		r.Set(&v1beta1.ShootList{
 			Items: []v1beta1.Shoot{
 				{}, {}, {},
 			},
@@ -151,8 +153,9 @@ func Test_run(t *testing.T) {
 	})
 
 	t.Run("empty output format", func(t *testing.T) {
-		s := &gardener.LastState{}
-		stopFn, err := fixServer(l, s)
+		c := agent.NewCache[*v1beta1.ShootList]()
+		r := c.Register("test-data")
+		stopFn, err := fixServer(l, c)
 		assert.NoError(t, err)
 		defer stopFn()
 
@@ -169,7 +172,7 @@ func Test_run(t *testing.T) {
 		o.createdBy = "owner"
 		o.outFormat = *output.New(&o.outFormat, "", "%a", "%e")
 
-		s.Set(&v1beta1.ShootList{
+		r.Set(&v1beta1.ShootList{
 			Items: []v1beta1.Shoot{
 				{}, {}, {},
 			},
@@ -180,7 +183,8 @@ func Test_run(t *testing.T) {
 	})
 
 	t.Run("client error", func(t *testing.T) {
-		s := &gardener.LastState{}
+		c := agent.NewCache[*v1beta1.ShootList]()
+		r := c.Register("test-data")
 
 		o := &options{
 			socketAddress: socketAddress,
@@ -195,7 +199,7 @@ func Test_run(t *testing.T) {
 		o.createdBy = "owner"
 		o.outFormat = *output.New(&o.outFormat, output.TextType, "%a", "%e")
 
-		s.Set(&v1beta1.ShootList{
+		r.Set(&v1beta1.ShootList{
 			Items: []v1beta1.Shoot{
 				{}, {}, {},
 			},
@@ -206,7 +210,8 @@ func Test_run(t *testing.T) {
 	})
 
 	t.Run("dial error", func(t *testing.T) {
-		s := &gardener.LastState{}
+		c := agent.NewCache[*v1beta1.ShootList]()
+		r := c.Register("test-data")
 
 		o := &options{
 			socketAddress: "\n",
@@ -220,7 +225,7 @@ func Test_run(t *testing.T) {
 		o.createdBy = "owner"
 		o.outFormat = *output.New(&o.outFormat, output.TextType, "%a", "%e")
 
-		s.Set(&v1beta1.ShootList{
+		r.Set(&v1beta1.ShootList{
 			Items: []v1beta1.Shoot{
 				{}, {}, {},
 			},
@@ -231,7 +236,8 @@ func Test_run(t *testing.T) {
 	})
 
 	t.Run("set nil and print error", func(t *testing.T) {
-		s := &gardener.LastState{}
+		c := agent.NewCache[*v1beta1.ShootList]()
+		r := c.Register("test-data")
 
 		o := &options{
 			socketAddress: socketAddress,
@@ -245,14 +251,14 @@ func Test_run(t *testing.T) {
 		cmd := NewCmd(o)
 		o.createdBy = "owner"
 
-		s.Set(nil)
+		r.Set(nil)
 
 		err := cmd.RunE(cmd, []string{})
 		assert.NoError(t, err)
 	})
 }
 
-func fixServer(l *logrus.Logger, g agent.StateGetter) (stop func(), err error) {
+func fixServer(l *logrus.Logger, c agent.Cache[*v1beta1.ShootList]) (stop func(), err error) {
 	lis, err := agent.NewSocket(socketNetwork, socketAddress)
 	if err != nil {
 		return nil, err
@@ -260,8 +266,8 @@ func fixServer(l *logrus.Logger, g agent.StateGetter) (stop func(), err error) {
 
 	grpcServer := googlerpc.NewServer(googlerpc.EmptyServerOption{})
 	agentServer := agent.NewServer(&agent.ServerOption{
-		Getter: g,
-		Logger: l,
+		GardenerCache: c,
+		Logger:        l,
 	})
 	cloud_agent.RegisterAgentServer(grpcServer, agentServer)
 

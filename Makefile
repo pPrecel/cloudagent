@@ -21,7 +21,7 @@ ln-to-path:
 
 .PHONY: install-agent
 install-agent:
-	cloudagent generate plist -k $(kubeconfigPath) -n $(namespace) --cronSpec "@every 60s" $(other_flags) > $(PLIST_PATH)
+	cloudagent generate plist $(other_flags) > $(PLIST_PATH)
 	launchctl load -w $(PLIST_PATH)
 
 .PHONY: uninstall-agent

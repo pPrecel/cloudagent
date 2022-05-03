@@ -14,12 +14,12 @@ type Client interface {
 	List(context.Context, v1.ListOptions) (*v1beta1.ShootList, error)
 }
 
-func NewWatchFunc(l *logrus.Logger, c Client, s StateSetter) agent.WatchFn {
+func NewWatchFunc(l *logrus.Logger, c Client, r agent.RegisteredResource[*v1beta1.ShootList]) agent.WatchFn {
 	l.Debug("setting up watchers func")
 	return func(context context.Context) {
 		l.Debug("watching for resources")
 		list, err := c.List(context, v1.ListOptions{})
-		s.Set(list)
+		r.Set(list)
 		if err != nil {
 			l.Errorf("when watching for shoots: %s", err.Error())
 			return

@@ -1,9 +1,13 @@
 package serve
 
 import (
-	"github.com/pPrecel/cloud-agent/internal/command"
+	"net"
+
+	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	command "github.com/pPrecel/cloud-agent/cmd"
 	"github.com/pPrecel/cloud-agent/internal/gardener"
 	"github.com/pPrecel/cloud-agent/pkg/agent"
+	"github.com/pPrecel/cloud-agent/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
@@ -12,14 +16,14 @@ import (
 type options struct {
 	*command.Options
 
-	kubeconfigPath string
-	namespace      string
-	cronSpec       string
+	configPath string
 
 	socketAddress    string
 	socketNetwork    string
+	getConfig        func(string) (*config.Config, error)
 	newClusterConfig func(string) (*rest.Config, error)
-	newWatchFunc     func(l *logrus.Logger, c gardener.Client, s gardener.StateSetter) agent.WatchFn
+	newSocket        func(network, address string) (net.Listener, error)
+	newWatchFunc     func(l *logrus.Logger, c gardener.Client, s agent.RegisteredResource[*v1beta1.ShootList]) agent.WatchFn
 }
 
 func NewOptions(opts *command.Options) *options {
@@ -27,18 +31,16 @@ func NewOptions(opts *command.Options) *options {
 		Options:          opts,
 		socketAddress:    agent.Address,
 		socketNetwork:    agent.Network,
+		getConfig:        config.GetConfig,
 		newClusterConfig: gardener.NewClusterConfig,
+		newSocket:        agent.NewSocket,
 		newWatchFunc:     gardener.NewWatchFunc,
 	}
 }
 
 func (o *options) validate() error {
-	if o.kubeconfigPath == "" {
-		return errors.New("kubeconfigPath should not be empty")
-	}
-
-	if o.namespace == "" {
-		return errors.New("namespace should not be empty")
+	if o.configPath == "" {
+		return errors.New("configPath should not be empty")
 	}
 
 	return nil

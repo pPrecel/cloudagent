@@ -3,14 +3,17 @@ package serve
 import (
 	"context"
 	"io"
+	"net"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/pPrecel/cloud-agent/internal/command"
+	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	command "github.com/pPrecel/cloud-agent/cmd"
 	"github.com/pPrecel/cloud-agent/internal/gardener"
 	"github.com/pPrecel/cloud-agent/pkg/agent"
+	"github.com/pPrecel/cloud-agent/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -24,39 +27,41 @@ func TestNewCmd(t *testing.T) {
 	c := NewCmd(o)
 
 	t.Run("defaults", func(t *testing.T) {
-		assert.Equal(t, "", o.kubeconfigPath)
-		assert.Equal(t, "", o.namespace)
-		assert.Equal(t, "@every 15m", o.cronSpec)
+		assert.Equal(t, config.ConfigPath, o.configPath)
 	})
 
 	t.Run("parse flags", func(t *testing.T) {
 		c.ParseFlags([]string{
-			"--kubeconfigPath", "path",
-			"--namespace", "namespace",
-			"--cronSpec", "@every 15m",
+			"--configPath", "path",
 		})
 
-		assert.Equal(t, "path", o.kubeconfigPath)
-		assert.Equal(t, "namespace", o.namespace)
-		assert.Equal(t, "@every 15m", o.cronSpec)
+		assert.Equal(t, "path", o.configPath)
 	})
 
 	t.Run("parse shortcuts", func(t *testing.T) {
 		c.ParseFlags([]string{
-			"-k", "other-path",
-			"-n", "other-namespace",
-			"-c", "@every 20m",
+			"-c", "other-path",
 		})
 
-		assert.Equal(t, "other-path", o.kubeconfigPath)
-		assert.Equal(t, "other-namespace", o.namespace)
-		assert.Equal(t, "@every 20m", o.cronSpec)
+		assert.Equal(t, "other-path", o.configPath)
 	})
 }
 
 var (
 	testNetwork = "unix"
 	testAddress = filepath.Join(os.TempDir(), "serve-test-socket.sock")
+
+	fixConfigFn = func(s string) (*config.Config, error) {
+		return &config.Config{
+			PersistentSpec: "@every 2m",
+			GardenerProjects: []config.GardenerProject{
+				{
+					Namespace:      "test-namespace",
+					KubeconfigPath: "path",
+				},
+			},
+		}, nil
+	}
 )
 
 func Test_run(t *testing.T) {
@@ -71,18 +76,18 @@ func Test_run(t *testing.T) {
 			},
 			socketNetwork: testNetwork,
 			socketAddress: testAddress,
+			newSocket:     agent.NewSocket,
+			getConfig: func(s string) (*config.Config, error) {
+				return &config.Config{}, nil
+			},
 			newClusterConfig: func(s string) (*rest.Config, error) {
 				return fixRestClient()
 			},
-			newWatchFunc: func(l *logrus.Logger, c gardener.Client, s gardener.StateSetter) agent.WatchFn {
+			newWatchFunc: func(l *logrus.Logger, c gardener.Client, s agent.RegisteredResource[*v1beta1.ShootList]) agent.WatchFn {
 				return func(ctx context.Context) {}
 			},
 		}
 		c := NewCmd(o)
-		c.ParseFlags([]string{
-			"--kubeconfigPath", "/path",
-			"--namespace", "namespace",
-		})
 
 		err := c.PreRunE(c, []string{})
 		assert.NoError(t, err)
@@ -113,15 +118,34 @@ func Test_run(t *testing.T) {
 			},
 			socketNetwork: testNetwork,
 			socketAddress: testAddress,
+			newSocket:     agent.NewSocket,
+			getConfig: func(s string) (*config.Config, error) {
+				return nil, errors.New("test error")
+			},
+		}
+		c := NewCmd(o)
+
+		err := c.PreRunE(c, []string{})
+		assert.NoError(t, err)
+
+		assert.Error(t, c.RunE(c, []string{}))
+	})
+
+	t.Run("cluster config error", func(t *testing.T) {
+		o := &options{
+			Options: &command.Options{
+				Logger:  l,
+				Context: context.Background(),
+			},
+			socketNetwork: testNetwork,
+			socketAddress: testAddress,
+			getConfig:     fixConfigFn,
+			newSocket:     agent.NewSocket,
 			newClusterConfig: func(s string) (*rest.Config, error) {
 				return nil, errors.New("test error")
 			},
 		}
 		c := NewCmd(o)
-		c.ParseFlags([]string{
-			"--kubeconfigPath", "/path",
-			"--namespace", "namespace",
-		})
 
 		err := c.PreRunE(c, []string{})
 		assert.NoError(t, err)
@@ -137,15 +161,12 @@ func Test_run(t *testing.T) {
 			},
 			socketNetwork: testNetwork,
 			socketAddress: testAddress,
+			getConfig:     fixConfigFn,
 			newClusterConfig: func(s string) (*rest.Config, error) {
 				return fixWrongRestClient()
 			},
 		}
 		c := NewCmd(o)
-		c.ParseFlags([]string{
-			"--kubeconfigPath", "/path",
-			"--namespace", "namespace",
-		})
 
 		err := c.PreRunE(c, []string{})
 		assert.NoError(t, err)
@@ -153,59 +174,28 @@ func Test_run(t *testing.T) {
 		assert.Error(t, c.RunE(c, []string{}))
 	})
 
-	t.Run("wrong WatchFn type error", func(t *testing.T) {
+	t.Run("wrong socket path", func(t *testing.T) {
 		o := &options{
 			Options: &command.Options{
 				Logger:  l,
 				Context: context.Background(),
 			},
-			socketNetwork: testNetwork,
-			socketAddress: testAddress,
+			newSocket: func(network, address string) (net.Listener, error) {
+				return nil, errors.New("test error")
+			},
+			getConfig: fixConfigFn,
 			newClusterConfig: func(s string) (*rest.Config, error) {
 				return fixRestClient()
 			},
-			newWatchFunc: func(l *logrus.Logger, c gardener.Client, s gardener.StateSetter) agent.WatchFn {
+			newWatchFunc: func(l *logrus.Logger, c gardener.Client, s agent.RegisteredResource[*v1beta1.ShootList]) agent.WatchFn {
 				return func(ctx context.Context) {}
 			},
 		}
 		c := NewCmd(o)
-		c.ParseFlags([]string{
-			"--kubeconfigPath", "/path",
-			"--namespace", "namespace",
-		})
 
 		err := c.PreRunE(c, []string{})
 		assert.NoError(t, err)
 
-		o.cronSpec = ""
-		assert.Error(t, c.RunE(c, []string{}))
-	})
-
-	t.Run("wrong WatchFn type error", func(t *testing.T) {
-		o := &options{
-			Options: &command.Options{
-				Logger:  l,
-				Context: context.Background(),
-			},
-			socketNetwork: testNetwork,
-			socketAddress: testAddress,
-			newClusterConfig: func(s string) (*rest.Config, error) {
-				return fixRestClient()
-			},
-			newWatchFunc: func(l *logrus.Logger, c gardener.Client, s gardener.StateSetter) agent.WatchFn {
-				return func(ctx context.Context) {}
-			},
-		}
-		c := NewCmd(o)
-		c.ParseFlags([]string{
-			"--kubeconfigPath", "/path",
-			"--namespace", "namespace",
-		})
-
-		err := c.PreRunE(c, []string{})
-		assert.NoError(t, err)
-
-		o.socketAddress = "."
 		assert.Error(t, c.RunE(c, []string{}))
 	})
 }

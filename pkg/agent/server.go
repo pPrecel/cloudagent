@@ -11,40 +11,42 @@ import (
 
 var _ cloud_agent.AgentServer = &server{}
 
-//go:generate mockery --name=StateGetter --output=automock --outpkg=automock
-type StateGetter interface {
-	Get() *v1beta1.ShootList
-}
-
 type ServerOption struct {
-	Getter StateGetter
-	Logger *logrus.Logger
+	GardenerCache Cache[*v1beta1.ShootList]
+	Logger        *logrus.Logger
 }
 
 type server struct {
 	cloud_agent.UnimplementedAgentServer
-	getter StateGetter
-	logger *logrus.Logger
+	gardenerCache Cache[*v1beta1.ShootList]
+	logger        *logrus.Logger
 }
 
 func NewServer(opts *ServerOption) cloud_agent.AgentServer {
 	return &server{
-		logger: opts.Logger,
-		getter: opts.Getter,
+		logger:        opts.Logger,
+		gardenerCache: opts.GardenerCache,
 	}
 }
 
 func (s *server) GardenerShoots(ctx context.Context, _ *cloud_agent.Empty) (*cloud_agent.ShootList, error) {
 	s.logger.Debug("handling request")
 
-	state := s.getter.Get()
-	if state == nil {
+	v1beta1List := &v1beta1.ShootList{}
+	if s.gardenerCache == nil {
 		return nil, errors.New("can't get latest shoots list")
 	}
 
-	list := &cloud_agent.ShootList{}
-	for i := range state.Items {
-		item := state.Items[i]
+	r := s.gardenerCache.Resources()
+	for key := range r {
+		if r[key] != nil && r[key].Get() != nil {
+			v1beta1List.Items = append(v1beta1List.Items, r[key].Get().Items...)
+		}
+	}
+
+	agentList := &cloud_agent.ShootList{}
+	for i := range v1beta1List.Items {
+		item := v1beta1List.Items[i]
 
 		cond := cloud_agent.Condition_HEALTHY
 		if item.Status.IsHibernated {
@@ -55,7 +57,7 @@ func (s *server) GardenerShoots(ctx context.Context, _ *cloud_agent.Empty) (*clo
 			cond = cloud_agent.Condition_EMPTY
 		}
 
-		list.Shoots = append(list.Shoots, &cloud_agent.Shoot{
+		agentList.Shoots = append(agentList.Shoots, &cloud_agent.Shoot{
 			Name:        item.Name,
 			Namespace:   item.Namespace,
 			Labels:      item.Labels,
@@ -64,8 +66,8 @@ func (s *server) GardenerShoots(ctx context.Context, _ *cloud_agent.Empty) (*clo
 		})
 	}
 
-	s.logger.Debugf("returning list of %v items", len(list.Shoots))
-	return list, nil
+	s.logger.Debugf("returning list of %v items", len(agentList.Shoots))
+	return agentList, nil
 }
 
 func isConditionUnknown(shoot v1beta1.Shoot) bool {

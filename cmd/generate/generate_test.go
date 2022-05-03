@@ -6,7 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pPrecel/cloud-agent/internal/command"
+	command "github.com/pPrecel/cloud-agent/cmd"
+	"github.com/pPrecel/cloud-agent/pkg/config"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,36 +17,26 @@ func TestNewCmd(t *testing.T) {
 	c := NewCmd(o)
 
 	t.Run("defaults", func(t *testing.T) {
-		assert.Equal(t, "", o.kubeconfigPath)
-		assert.Equal(t, "", o.namespace)
-		assert.Equal(t, "@every 60s", o.cronSpec)
+		assert.Equal(t, config.ConfigPath, o.configPath)
 		assert.Equal(t, false, o.agentVerbose)
 	})
 
 	t.Run("parse flags", func(t *testing.T) {
 		c.ParseFlags([]string{
-			"--kubeconfigPath", "other-path",
-			"--namespace", "other-namespace",
-			"--cronSpec", "@every 15m",
+			"--configPath", "other-path",
 			"--agentVerbose", "true",
 		})
 
-		assert.Equal(t, "other-path", o.kubeconfigPath)
-		assert.Equal(t, "other-namespace", o.namespace)
-		assert.Equal(t, "@every 15m", o.cronSpec)
+		assert.Equal(t, "other-path", o.configPath)
 		assert.Equal(t, true, o.agentVerbose)
 	})
 
 	t.Run("parse shortcuts", func(t *testing.T) {
 		c.ParseFlags([]string{
-			"-k", "path",
-			"-n", "namespace",
-			"-c", "@every 20m",
+			"-c", "path",
 		})
 
-		assert.Equal(t, "path", o.kubeconfigPath)
-		assert.Equal(t, "namespace", o.namespace)
-		assert.Equal(t, "@every 20m", o.cronSpec)
+		assert.Equal(t, "path", o.configPath)
 		assert.Equal(t, true, o.agentVerbose)
 	})
 }
@@ -63,8 +54,7 @@ func Test_Cmd(t *testing.T) {
 			},
 		}
 		c := NewCmd(o)
-		o.kubeconfigPath = "anything"
-		o.namespace = "something"
+		o.configPath = "anything"
 
 		err := c.PreRunE(c, []string{})
 		assert.NoError(t, err)
@@ -75,10 +65,8 @@ func Test_Cmd(t *testing.T) {
 
 	t.Run("executable error", func(t *testing.T) {
 		err := run(&options{
-			kubeconfigPath: "anything",
-			namespace:      "something",
-			cronSpec:       "2s",
-			agentVerbose:   true,
+			configPath:   "anything",
+			agentVerbose: true,
 			executable: func() (string, error) {
 				return "", errors.New("test error")
 			},
