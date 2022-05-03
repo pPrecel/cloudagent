@@ -14,7 +14,7 @@ This application is created with a view to using it as [the tmux](https://github
 
 ## Installation
 
-1. Verify and build program:
+1. Verify and build the program:
 
     ```bash
     make verify
