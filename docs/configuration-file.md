@@ -1,6 +1,10 @@
 # Configuration file
 
-The Cloud Agent can be fully configured by creating the `.cloudagent.conf.yaml` file in the `${HOME}` directory. The file should contain information about the clouds you want to observe. The sample config file:
+The Cloud Agent can be fully configured by creating the `.cloudagent.conf.yaml` file in the `${HOME}` directory. The file should contain information about the clouds you want to observe. 
+
+> **NOTE:** The configuration file can be easily maintained using JSON schema. To generate it use the `cloudagent generate schema` command.
+
+The sample config file:
 
 ```yaml
 persistentSpec: "@every 2s"
