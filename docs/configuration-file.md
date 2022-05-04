@@ -5,11 +5,11 @@ The Cloud Agent can be fully configured by creating the `.cloudagent.conf.yaml` 
 ```yaml
 persistentSpec: "@every 2s"
 gardenerProjects:
-    - namespace: "n1"
+  - namespace: "n1"
     kubeconfigPath: "/path1"
-    - namespace: "n2"
+  - namespace: "n2"
     kubeconfigPath: "/path1"
-    - namespace: "n3"
+  - namespace: "n3"
     kubeconfigPath: "/path2"
 gcpProjects: []
 ```
