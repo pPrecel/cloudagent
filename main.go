@@ -34,9 +34,9 @@ func main() {
 	cmd.AddCommand(&cobra.Command{Use: "completion", Hidden: true})
 
 	cmd.AddCommand(
+		generate.NewCmd(o),
 		serve.NewCmd(serve.NewOptions(o)),
 		state.NewCmd(state.NewOptions(o)),
-		generate.NewCmd(generate.NewOptions(o)),
 	)
 
 	err := cmd.Execute()
