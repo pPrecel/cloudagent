@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"testing"
 
-	command "github.com/pPrecel/cloud-agent/cmd"
-	"github.com/pPrecel/cloud-agent/pkg/config"
+	command "github.com/pPrecel/cloudagent/cmd"
+	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )

@@ -1,8 +1,8 @@
 package plist
 
 import (
-	"github.com/pPrecel/cloud-agent/internal/darwin"
-	"github.com/pPrecel/cloud-agent/pkg/config"
+	"github.com/pPrecel/cloudagent/internal/darwin"
+	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/spf13/cobra"
 )
 

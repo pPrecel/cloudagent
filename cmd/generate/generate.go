@@ -1,9 +1,9 @@
 package generate
 
 import (
-	command "github.com/pPrecel/cloud-agent/cmd"
-	"github.com/pPrecel/cloud-agent/cmd/generate/plist"
-	"github.com/pPrecel/cloud-agent/cmd/generate/schema"
+	command "github.com/pPrecel/cloudagent/cmd"
+	"github.com/pPrecel/cloudagent/cmd/generate/plist"
+	"github.com/pPrecel/cloudagent/cmd/generate/schema"
 	"github.com/spf13/cobra"
 )
 

@@ -1,9 +1,9 @@
 # Cloud Agent
 
-[![license](https://img.shields.io/badge/License-MIT-brightgreen.svg?style=for-the-badge)](https://github.com/pPrecel/cloud-agent/blob/main/LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/pPrecel/cloud-agent?style=for-the-badge)](https://goreportcard.com/report/github.com/pPrecel/cloud-agent)
-[![build](https://img.shields.io/github/workflow/status/pPrecel/cloud-agent/build?style=for-the-badge)](https://github.com/pPrecel/cloud-agent/actions/workflows/build.yml)
-[![Coverage](https://img.shields.io/coveralls/github/pPrecel/cloud-agent?style=for-the-badge)](https://coveralls.io/github/pPrecel/cloud-agent)
+[![license](https://img.shields.io/badge/License-MIT-brightgreen.svg?style=for-the-badge)](https://github.com/pPrecel/cloudagent/blob/main/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/pPrecel/cloudagent?style=for-the-badge)](https://goreportcard.com/report/github.com/pPrecel/cloudagent)
+[![build](https://img.shields.io/github/workflow/status/pPrecel/cloudagent/build?style=for-the-badge)](https://github.com/pPrecel/cloudagent/actions/workflows/build.yml)
+[![Coverage](https://img.shields.io/coveralls/github/pPrecel/cloudagent?style=for-the-badge)](https://coveralls.io/github/pPrecel/cloudagent)
 
 The simple and easy-to-use program is designed to watch user activity and possible orphan clusters for Cloud Providers:
 
@@ -35,7 +35,7 @@ This application is created with a view to using it as [the tmux](https://github
 4. Check if the program works by getting its logs:
 
     ```bash
-    tail /tmp/cloud-agent.stdout
+    tail /tmp/cloudagent.stdout
     ```
 
 5. After waiting ~60 seconds for the first iteration of the watcher you can get the cluster state:

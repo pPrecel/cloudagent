@@ -4,8 +4,8 @@ import (
 	"io"
 	"os"
 
-	command "github.com/pPrecel/cloud-agent/cmd"
-	"github.com/pPrecel/cloud-agent/pkg/config"
+	command "github.com/pPrecel/cloudagent/cmd"
+	"github.com/pPrecel/cloudagent/pkg/config"
 )
 
 type options struct {

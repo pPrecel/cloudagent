@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	"github.com/pPrecel/cloud-agent/internal/gardener/automock"
-	"github.com/pPrecel/cloud-agent/pkg/agent"
+	"github.com/pPrecel/cloudagent/internal/gardener/automock"
+	"github.com/pPrecel/cloudagent/pkg/agent"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

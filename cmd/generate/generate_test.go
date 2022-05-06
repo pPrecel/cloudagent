@@ -3,7 +3,7 @@ package generate
 import (
 	"testing"
 
-	command "github.com/pPrecel/cloud-agent/cmd"
+	command "github.com/pPrecel/cloudagent/cmd"
 	"github.com/stretchr/testify/assert"
 )
 

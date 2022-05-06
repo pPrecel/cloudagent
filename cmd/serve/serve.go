@@ -2,10 +2,10 @@ package serve
 
 import (
 	v1beta1_apis "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	"github.com/pPrecel/cloud-agent/internal/gardener"
-	"github.com/pPrecel/cloud-agent/pkg/agent"
-	cloud_agent "github.com/pPrecel/cloud-agent/pkg/agent/proto"
-	"github.com/pPrecel/cloud-agent/pkg/config"
+	"github.com/pPrecel/cloudagent/internal/gardener"
+	"github.com/pPrecel/cloudagent/pkg/agent"
+	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
+	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/robfig/cron/v3"
 	"github.com/spf13/cobra"
 	googlerpc "google.golang.org/grpc"

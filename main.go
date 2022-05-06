@@ -4,10 +4,10 @@ import (
 	"context"
 	"os"
 
-	command "github.com/pPrecel/cloud-agent/cmd"
-	"github.com/pPrecel/cloud-agent/cmd/generate"
-	"github.com/pPrecel/cloud-agent/cmd/serve"
-	"github.com/pPrecel/cloud-agent/cmd/state"
+	command "github.com/pPrecel/cloudagent/cmd"
+	"github.com/pPrecel/cloudagent/cmd/generate"
+	"github.com/pPrecel/cloudagent/cmd/serve"
+	"github.com/pPrecel/cloudagent/cmd/state"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )

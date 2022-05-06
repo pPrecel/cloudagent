@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	cloud_agent "github.com/pPrecel/cloud-agent/pkg/agent/proto"
+	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

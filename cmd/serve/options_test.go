@@ -3,7 +3,7 @@ package serve
 import (
 	"testing"
 
-	command "github.com/pPrecel/cloud-agent/cmd"
+	command "github.com/pPrecel/cloudagent/cmd"
 )
 
 func Test_options_validate(t *testing.T) {

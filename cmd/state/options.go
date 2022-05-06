@@ -5,9 +5,9 @@ import (
 	"os"
 	"time"
 
-	command "github.com/pPrecel/cloud-agent/cmd"
-	"github.com/pPrecel/cloud-agent/internal/output"
-	"github.com/pPrecel/cloud-agent/pkg/agent"
+	command "github.com/pPrecel/cloudagent/cmd"
+	"github.com/pPrecel/cloudagent/internal/output"
+	"github.com/pPrecel/cloudagent/pkg/agent"
 )
 
 type options struct {

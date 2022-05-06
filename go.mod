@@ -1,4 +1,4 @@
-module github.com/pPrecel/cloud-agent
+module github.com/pPrecel/cloudagent
 
 go 1.18
 

@@ -33,7 +33,7 @@ archives:
 nfpms:
 - maintainer: Filip Strózik <filip.strozik@outlook.com>
   description: The simple and easy-to-use program designed to watch user activity for Cloud Providers.
-  homepage: https://github.com/pPrecel/cloud-agent
+  homepage: https://github.com/pPrecel/cloudagent
   license: MIT
   formats:
   - deb
