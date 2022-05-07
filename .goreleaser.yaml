@@ -54,6 +54,8 @@ brews:
       system "#{bin}/cloudagent"
     install: |
       bin.install "cloudagent"
+    plist: |
+      system "#{bin}/cloudagent generate plist"
 
 checksum:
   name_template: 'checksums.txt'
