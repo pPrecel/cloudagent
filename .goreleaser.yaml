@@ -68,7 +68,7 @@ brews:
               <string>com.pPrecel.cloudagent.agent.plist</string>
               <key>ProgramArguments</key>
               <array>
-                      <string>/usr/local/bin/cloudagent</string>
+                      <string>#{opt_bin}/cloudagent</string>
                       <string>serve</string>
               </array>
               <key>RunAtLoad</key>
