@@ -45,11 +45,13 @@ brews:
     description: "The simple and easy-to-use program designed to watch user activity for Cloud Providers."
     tap:
       owner: pPrecel
-      name: homebrew-cloudagent
+      name: homebrew-tap
     goarm: "7"
     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
     folder: Formula
     license: "MIT"
+    test: |
+      system "#{bin}/cloudagent"
     install: |
       bin.install "cloudagent"
 
