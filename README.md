@@ -23,6 +23,12 @@ Visit the [releases page](https://github.com/pPrecel/cloudagent/releases) to dow
 1. Use Homebrew to install `cloudagent`:
 
     ```bash
+    brew install pPrecel/tap/cloudagent
+    ```
+
+    or
+
+    ```bash
     brew tap pPrecel/tap
     brew install cloudagent
     ```

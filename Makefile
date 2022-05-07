@@ -7,10 +7,6 @@ CURRENT_DIR = $(shell pwd)
 build:
 	go build -o .out/cloudagent main.go
 
-.PHONY: cp-to-path
-cp-to-path:
-	cp "$(CURRENT_DIR)/.out/cloudagent" $(CLOUDAGENT_PATH)
-
 .PHONY: rm-from-path
 rm-from-path:
 	rm $(CLOUDAGENT_PATH)
@@ -20,10 +16,13 @@ ln-to-path:
 	ln -s -f "$(CURRENT_DIR)/.out/cloudagent" $(CLOUDAGENT_PATH)
 
 .PHONY: install-agent
-install-agent:
-	@./hack/config_template.sh
+install-agent: bootstrap-config
 	cloudagent generate plist $(other_flags) > $(PLIST_PATH)
 	launchctl load -w $(PLIST_PATH)
+
+.PHONY: bootstrap-config
+bootstrap-config:
+	@./hack/config_template.sh
 
 .PHONY: uninstall-agent
 uninstall-agent:
