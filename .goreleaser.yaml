@@ -47,7 +47,6 @@ brews:
       owner: pPrecel
       name: homebrew-cloudagent
     goarm: "7"
-    url_template: "http://github.com/pPrecel/cloudagent/releases/{{ .Tag }}/{{ .ArtifactName }}"
     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
     folder: Formula
     license: "MIT"
