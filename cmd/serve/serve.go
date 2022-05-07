@@ -13,9 +13,9 @@ import (
 
 func NewCmd(o *options) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "serve",
+		Use:   "serve",
 		Short: "Serve clouds watching.",
-		Long: "Use this command to serve an agent functionality to observe clouds you specify in the configuration file.",
+		Long:  "Use this command to serve an agent functionality to observe clouds you specify in the configuration file.",
 		PreRunE: func(_ *cobra.Command, _ []string) error {
 			return o.validate()
 		},
