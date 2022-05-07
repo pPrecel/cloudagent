@@ -14,6 +14,29 @@ This application is created with a view to using it as [the tmux](https://github
 
 ## Installation
 
+### Github Release
+
+Visit the [releases page](https://github.com/pPrecel/cloudagent/releases) to download one of the pre-built binaries for your platform.
+
+### Homebrew
+
+1. Use Homebrew to install `cloudagent`:
+
+    ```bash
+    brew tap pPrecel/tap
+    brew install cloudagent
+    ```
+
+2. Create a configuration file () in the `${HOME}/.cloudagent.conf.yaml` location.
+
+3. Start the `cloudagent` service:
+
+    ```bash
+    brew services start cloudagent
+    ```
+
+### Local development
+
 1. Verify and build the program:
 
     ```bash
@@ -21,7 +44,7 @@ This application is created with a view to using it as [the tmux](https://github
     make build
     ```
 
-2. Create configuration file ([see also](./docs/configuration-file.md)) in the `${HOME}/.cloudagent.conf.yaml` location.
+2. Create a configuration file ([see also](./docs/configuration-file.md)) in the `${HOME}/.cloudagent.conf.yaml` location.
 
 3. Add the program to PATH and install it as a system agent:
 
@@ -57,6 +80,6 @@ This application is created with a view to using it as [the tmux](https://github
 
 To add this application to tmux put line below in the `~/.tmux.conf` file:
 
-```text
-set -ag status-right ' #(cloudagent state --createdBy <OWNER_NAME> -o text) '
-```
+    ```text
+    set -ag status-right ' #(cloudagent state --createdBy <OWNER_NAME> -o text) '
+    ```
