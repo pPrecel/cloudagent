@@ -19,7 +19,9 @@ const (
 
 func NewCmd(o *options) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "state",
+		Use:   "state",
+		Short: "Get cached states from the agent.",
+		Long:  "Use this command to communicate with the agent's socket and take the info about clouds in the specified output type.",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return run(o)
 		},
