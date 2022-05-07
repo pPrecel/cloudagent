@@ -21,6 +21,7 @@ ln-to-path:
 
 .PHONY: install-agent
 install-agent:
+	@./hack/config_template.sh
 	cloudagent generate plist $(other_flags) > $(PLIST_PATH)
 	launchctl load -w $(PLIST_PATH)
 

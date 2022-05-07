@@ -67,19 +67,10 @@ Visit the [releases page](https://github.com/pPrecel/cloudagent/releases) to dow
     cloudagent state
     ```
 
-## Un-installation
-
-1. Remove the application from the path and remove system agent:
-
-    ```bash
-    make rm-from-path
-    make uninstall-agent
-    ```
-
 ## Integration with tmux
 
 To add this application to tmux put line below in the `~/.tmux.conf` file:
 
-    ```text
-    set -ag status-right ' #(cloudagent state --createdBy <OWNER_NAME> -o text) '
-    ```
+```text
+set -ag status-right ' #(cloudagent state --createdBy <OWNER_NAME> -o text) '
+```
