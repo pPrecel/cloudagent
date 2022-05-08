@@ -56,32 +56,11 @@ brews:
       bin.install "cloudagent"
     post_install: |
       system "make", "bootstrap-config"
-      system "#{bin}/brew", "services", "start", "cloudagent"
-    plist: |
-      <?xml version="1.0" encoding="UTF-8"?>
-      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-      <plist version="1.0">
-        <dict>
-          <key>EnvironmentVariables</key>
-          <dict>
-            <key>PATH</key>
-            <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:</string>
-          </dict>
-          <key>Label</key>
-          <string>#{plist_name}</string>
-          <key>ProgramArguments</key>
-          <array>
-            <string>#{opt_bin}/cloudagent</string>
-            <string>serve</string>
-          </array>
-          <key>RunAtLoad</key>
-          <true/>
-          <key>KeepAlive</key>
-          <true/>
-          <key>StandardOutPath</key>
-          <string>/tmp/cloudagent/cloudagent.stdout</string>
-        </dict>
-      </plist>
+    service: |
+      run ["#{opt_bin}/cloudagent", "serve"]
+      log_path "/tmp/cloudagent/cloudagent.stdout"
+      environment_variables PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:"
+      keep_alive true
 
 checksum:
   name_template: 'checksums.txt'
