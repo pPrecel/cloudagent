@@ -33,7 +33,7 @@ Visit the [releases page](https://github.com/pPrecel/cloudagent/releases) to dow
     brew install cloudagent
     ```
 
-2. Create a configuration file () in the `${HOME}/.cloudagent.conf.yaml` location.
+2. Extend configuration ([see also](./docs/configuration-file.md)) in the `~/.cloudagent.conf.yaml` location.
 
 3. Start the `cloudagent` service:
 
@@ -50,7 +50,7 @@ Visit the [releases page](https://github.com/pPrecel/cloudagent/releases) to dow
     make build
     ```
 
-2. Create a configuration file ([see also](./docs/configuration-file.md)) in the `${HOME}/.cloudagent.conf.yaml` location.
+2. Extend configuration ([see also](./docs/configuration-file.md)) in the `~/.cloudagent.conf.yaml` location.
 
 3. Add the program to PATH and install it as a system agent:
 
@@ -75,7 +75,7 @@ Visit the [releases page](https://github.com/pPrecel/cloudagent/releases) to dow
 
 ## Integration with tmux
 
-To add this application to tmux put line below in the `~/.tmux.conf` file:
+To add this application to tmux put the line below in the `~/.tmux.conf` file:
 
 ```text
 set -ag status-right ' #(cloudagent state --createdBy <OWNER_NAME> -o text) '
