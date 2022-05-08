@@ -5,7 +5,7 @@ import (
 	"os"
 
 	command "github.com/pPrecel/cloudagent/cmd"
-	"github.com/pPrecel/cloudagent/cmd/generate"
+	"github.com/pPrecel/cloudagent/cmd/config"
 	"github.com/pPrecel/cloudagent/cmd/serve"
 	"github.com/pPrecel/cloudagent/cmd/state"
 	"github.com/sirupsen/logrus"
@@ -34,7 +34,7 @@ func main() {
 	cmd.AddCommand(&cobra.Command{Use: "completion", Hidden: true})
 
 	cmd.AddCommand(
-		generate.NewCmd(o),
+		config.NewCmd(o),
 		serve.NewCmd(serve.NewOptions(o)),
 		state.NewCmd(state.NewOptions(o)),
 	)

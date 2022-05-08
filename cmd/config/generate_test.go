@@ -1,4 +1,4 @@
-package generate
+package config
 
 import (
 	"testing"
@@ -10,5 +10,5 @@ import (
 func TestNewCmd(t *testing.T) {
 	c := NewCmd(&command.Options{})
 
-	assert.Equal(t, 2, len(c.Commands()))
+	assert.Equal(t, 1, len(c.Commands()))
 }
