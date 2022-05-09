@@ -61,17 +61,15 @@ Visit the [releases page](https://github.com/pPrecel/cloudagent/releases) to dow
 
     > **NOTE:** for local development or need to get more information from the agent you can pass more arguments to the `make install-agent` command like: `other_flags=--agentVerbose`.
 
-4. Check if the program works by getting its logs:
+## Make use of it
 
-    ```bash
-    tail /tmp/cloudagent.stdout
-    ```
+After installing, configuring, and starting the service process, cloudagent would fetch info from given clouds after ~60sec from start. To check that program is working correctly use:
 
-5. After waiting ~60 seconds for the first iteration of the watcher you can get the cluster state:
+```bash
+cloudagent state
+```
 
-    ```bash
-    cloudagent state
-    ```
+> **NOTE:** I really recommend you to use `--help` for all commands to familiarize with all functionalities. Logs from running service are stored in `/tmp/cloudagent/cloudagent.stdout` and you can use for example `cat` program to read all of them.
 
 ## Integration with tmux
 
