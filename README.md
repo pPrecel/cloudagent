@@ -41,26 +41,6 @@ Visit the [releases page](https://github.com/pPrecel/cloudagent/releases) to dow
     brew services start cloudagent
     ```
 
-### Local development
-
-1. Verify and build the program:
-
-    ```bash
-    make verify
-    make build
-    ```
-
-2. Extend configuration ([see also](./docs/configuration-file.md)) in the `~/.cloudagent.conf.yaml` location.
-
-3. Add the program to PATH and install it as a system agent:
-
-    ```bash
-    make ln-to-path
-    make install-agent
-    ```
-
-    > **NOTE:** for local development or need to get more information from the agent you can pass more arguments to the `make install-agent` command like: `other_flags=--agentVerbose`.
-
 ## Make use of it
 
 After installing, configuring, and starting the service process, cloudagent would fetch info from given clouds after ~60sec from start. To check that program is working correctly use:
@@ -78,3 +58,7 @@ To add this application to tmux put the line below in the `~/.tmux.conf` file:
 ```text
 set -ag status-right ' #(cloudagent state --createdBy <OWNER_NAME> -o text) '
 ```
+
+## Contribution
+
+Any help and contribution would be welcome. If you want to help with creating feature requests, logging bugs, or/and working on any existing ticket, go to the [issues](https://github.com/pPrecel/cloudagent/issues) tab. If you decided to look into code, [this document](./docs/local-development.md) would be helpful.
