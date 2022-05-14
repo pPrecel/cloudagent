@@ -25,31 +25,31 @@ func TestNewCmd(t *testing.T) {
 
 	t.Run("defaults", func(t *testing.T) {
 		assert.Equal(t, "", o.createdBy)
-		assert.Equal(t, *output.New(&output.Output{}, "table", "%r/%h/%u/%a", "-/-/-/-"), o.outFormat)
+		assert.Equal(t, *output.NewFlag(&output.Flag{}, "table", "$r/$h/$u/$a", "-/-/-/-"), o.outFormat)
 		assert.Equal(t, 2*time.Second, o.timeout)
 	})
 
 	t.Run("parse flags", func(t *testing.T) {
 		c.ParseFlags([]string{
 			"--createdBy", "owner",
-			"--output", "text=%a=%e",
+			"--output", "text=$a=$e",
 			"--timeout", "5s",
 		})
 
 		assert.Equal(t, "owner", o.createdBy)
-		assert.Equal(t, *output.New(&output.Output{}, "text", "%a", "%e"), o.outFormat)
+		assert.Equal(t, *output.NewFlag(&output.Flag{}, "text", "$a", "$e"), o.outFormat)
 		assert.Equal(t, 5*time.Second, o.timeout)
 	})
 
 	t.Run("parse shortcuts", func(t *testing.T) {
 		c.ParseFlags([]string{
 			"-c", "other-owner",
-			"-o", "text=%a%a%a=%e%e%e",
+			"-o", "text=$a$a$a=$e$e$e",
 			"-t", "10s",
 		})
 
 		assert.Equal(t, "other-owner", o.createdBy)
-		assert.Equal(t, *output.New(&output.Output{}, "text", "%a%a%a", "%e%e%e"), o.outFormat)
+		assert.Equal(t, *output.NewFlag(&output.Flag{}, "text", "$a$a$a", "$e$e$e"), o.outFormat)
 		assert.Equal(t, 10*time.Second, o.timeout)
 	})
 }
@@ -81,125 +81,7 @@ func Test_run(t *testing.T) {
 		}
 		cmd := NewCmd(o)
 		o.createdBy = "owner"
-		o.outFormat = *output.New(&o.outFormat, output.TextType, "%r/%h/%u/%a", "-/-/-/-")
-
-		r.Set(&v1beta1.ShootList{
-			Items: []v1beta1.Shoot{
-				{}, {}, {},
-			},
-		})
-
-		err = cmd.RunE(cmd, []string{})
-		assert.NoError(t, err)
-	})
-
-	t.Run("run and print text error", func(t *testing.T) {
-		c := agent.NewCache[*v1beta1.ShootList]()
-		r := c.Register("test-data")
-		stopFn, err := fixServer(l, c)
-		assert.NoError(t, err)
-		defer stopFn()
-
-		o := &options{
-			socketAddress: socketAddress,
-			socketNetwork: socketNetwork,
-			writer:        io.Discard,
-			Options: &command.Options{
-				Logger:  l,
-				Context: context.Background(),
-			},
-		}
-		cmd := NewCmd(o)
-		o.createdBy = "owner"
-		o.outFormat = *output.New(&o.outFormat, output.TextType, "", "-/-/-/-")
-
-		r.Set(&v1beta1.ShootList{
-			Items: []v1beta1.Shoot{},
-		})
-
-		err = cmd.RunE(cmd, []string{})
-		assert.NoError(t, err)
-	})
-
-	t.Run("run and print json", func(t *testing.T) {
-		c := agent.NewCache[*v1beta1.ShootList]()
-		r := c.Register("test-data")
-		stopFn, err := fixServer(l, c)
-		assert.NoError(t, err)
-		defer stopFn()
-
-		o := &options{
-			socketAddress: socketAddress,
-			socketNetwork: socketNetwork,
-			writer:        io.Discard,
-			Options: &command.Options{
-				Logger:  l,
-				Context: context.Background(),
-			},
-		}
-		cmd := NewCmd(o)
-		o.createdBy = "owner"
-		o.outFormat = *output.New(&o.outFormat, output.JsonType, "", "")
-
-		r.Set(&v1beta1.ShootList{
-			Items: []v1beta1.Shoot{
-				{}, {}, {},
-			},
-		})
-
-		err = cmd.RunE(cmd, []string{})
-		assert.NoError(t, err)
-	})
-
-	t.Run("run and print table", func(t *testing.T) {
-		c := agent.NewCache[*v1beta1.ShootList]()
-		r := c.Register("test-data")
-		stopFn, err := fixServer(l, c)
-		assert.NoError(t, err)
-		defer stopFn()
-
-		o := &options{
-			socketAddress: socketAddress,
-			socketNetwork: socketNetwork,
-			writer:        io.Discard,
-			Options: &command.Options{
-				Logger:  l,
-				Context: context.Background(),
-			},
-		}
-		cmd := NewCmd(o)
-		o.createdBy = "owner"
-		o.outFormat = *output.New(&o.outFormat, output.TableType, "%a", "%e")
-
-		r.Set(&v1beta1.ShootList{
-			Items: []v1beta1.Shoot{
-				{}, {}, {},
-			},
-		})
-
-		err = cmd.RunE(cmd, []string{})
-		assert.NoError(t, err)
-	})
-
-	t.Run("empty output format", func(t *testing.T) {
-		c := agent.NewCache[*v1beta1.ShootList]()
-		r := c.Register("test-data")
-		stopFn, err := fixServer(l, c)
-		assert.NoError(t, err)
-		defer stopFn()
-
-		o := &options{
-			socketAddress: socketAddress,
-			socketNetwork: socketNetwork,
-			writer:        io.Discard,
-			Options: &command.Options{
-				Logger:  l,
-				Context: context.Background(),
-			},
-		}
-		cmd := NewCmd(o)
-		o.createdBy = "owner"
-		o.outFormat = *output.New(&o.outFormat, "", "%a", "%e")
+		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$r/$h/$u/$a", "-/-/-/-")
 
 		r.Set(&v1beta1.ShootList{
 			Items: []v1beta1.Shoot{
@@ -226,7 +108,7 @@ func Test_run(t *testing.T) {
 		}
 		cmd := NewCmd(o)
 		o.createdBy = "owner"
-		o.outFormat = *output.New(&o.outFormat, output.TextType, "%a", "%e")
+		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$a", "$e")
 
 		r.Set(&v1beta1.ShootList{
 			Items: []v1beta1.Shoot{
@@ -252,35 +134,13 @@ func Test_run(t *testing.T) {
 		}
 		cmd := NewCmd(o)
 		o.createdBy = "owner"
-		o.outFormat = *output.New(&o.outFormat, output.TextType, "%a", "%e")
+		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$a", "$e")
 
 		r.Set(&v1beta1.ShootList{
 			Items: []v1beta1.Shoot{
 				{}, {}, {},
 			},
 		})
-
-		err := cmd.RunE(cmd, []string{})
-		assert.NoError(t, err)
-	})
-
-	t.Run("set nil and print error", func(t *testing.T) {
-		c := agent.NewCache[*v1beta1.ShootList]()
-		r := c.Register("test-data")
-
-		o := &options{
-			socketAddress: socketAddress,
-			socketNetwork: socketNetwork,
-			writer:        io.Discard,
-			Options: &command.Options{
-				Logger:  l,
-				Context: context.Background(),
-			},
-		}
-		cmd := NewCmd(o)
-		o.createdBy = "owner"
-
-		r.Set(nil)
 
 		err := cmd.RunE(cmd, []string{})
 		assert.NoError(t, err)

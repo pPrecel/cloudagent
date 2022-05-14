@@ -1,9 +1,12 @@
 package output
 
 import (
+	"bytes"
 	"testing"
 
+	"github.com/pPrecel/cloudagent/internal/output/automock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestOutput_Set(t *testing.T) {
@@ -94,7 +97,7 @@ func TestOutput_Set(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			o := &Output{}
+			o := &Flag{}
 			if err := o.Set(tt.arg); (err != nil) != tt.wantErr {
 				t.Errorf("Output.Set() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -110,8 +113,8 @@ func TestOutput_Set(t *testing.T) {
 
 func TestOutput_SmallerMethods(t *testing.T) {
 	t.Run("create table output and change it to text", func(t *testing.T) {
-		output := &Output{}
-		o := New(output, TableType, "", "")
+		output := &Flag{}
+		o := NewFlag(output, TableType, "", "")
 		assert.Equal(t, output, o)
 
 		assert.NoError(t, o.Set("table"))
@@ -126,4 +129,45 @@ func TestOutput_SmallerMethods(t *testing.T) {
 		assert.Equal(t, "bb", o.ErrorFormat())
 		assert.Equal(t, "aa", o.StringFormat())
 	})
+}
+
+func TestFlag_Print(t *testing.T) {
+	emptyFormater := automock.NewFormater(t)
+	emptyFormater.On("JSON").Return(nil).Once()
+	emptyFormater.On("YAML").Return(nil).Once()
+	emptyFormater.On("Table").Return([]string{}, [][]string{}).Once()
+	emptyFormater.On("Text", mock.Anything, mock.Anything).Return("").Once()
+
+	tests := []struct {
+		name       string
+		outputType OutputType
+		wantW      string
+		wantErr    bool
+	}{
+		{
+			name:       "print json",
+			outputType: JsonType,
+		},
+		{
+			name:       "print yaml",
+			outputType: YamlType,
+		},
+		{
+			name:       "print text",
+			outputType: TextType,
+		},
+		{
+			name:       "print table",
+			outputType: TableType,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			o := &Flag{
+				outputType: tt.outputType,
+			}
+			w := &bytes.Buffer{}
+			assert.NoError(t, o.Print(w, emptyFormater))
+		})
+	}
 }

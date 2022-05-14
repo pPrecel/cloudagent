@@ -2,66 +2,23 @@ package output
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
-	"reflect"
-	"strings"
 
-	"github.com/lensesio/tableprinter"
-	"github.com/tidwall/gjson"
+	"github.com/olekukonko/tablewriter"
+	"gopkg.in/yaml.v3"
 )
 
-type TextOptions struct {
-	Format string
-	RPath  string
-	HPath  string
-	UPath  string
-	APath  string
-}
-
-func PrintText(w io.Writer, v interface{}, o TextOptions, f ...string) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	s := o.Format
-	s = strings.Replace(s, "%a", gjson.GetBytes(b, o.APath).Raw, -1)
-
-	for i := range f {
-		b = []byte(gjson.GetBytes(b, f[i]).Raw)
-	}
-
-	s = strings.Replace(s, "%u", gjson.GetBytes(b, o.UPath).Raw, -1)
-	s = strings.Replace(s, "%h", gjson.GetBytes(b, o.HPath).Raw, -1)
-	s = strings.Replace(s, "%r", gjson.GetBytes(b, o.RPath).Raw, -1)
-
-	_, err = w.Write([]byte(s))
+func printText(w io.Writer, text string) error {
+	_, err := w.Write([]byte(text))
 
 	return err
 }
 
-type ErrorOptions struct {
-	Format string
-	Error  string
-}
-
-func PrintErrorText(w io.Writer, o ErrorOptions) error {
-	s := o.Format
-	s = strings.Replace(s, "%e", o.Error, -1)
-
-	_, err := w.Write([]byte(s))
-
-	return err
-}
-
-func PrintJson(w io.Writer, v interface{}, f ...string) error {
+func printJson(w io.Writer, v interface{}) error {
 	b, err := json.MarshalIndent(v, "", "    ")
 	if err != nil {
 		return err
-	}
-
-	for i := range f {
-		b = []byte(gjson.GetBytes(b, f[i]).Raw)
 	}
 
 	_, err = w.Write(b)
@@ -69,33 +26,29 @@ func PrintJson(w io.Writer, v interface{}, f ...string) error {
 	return err
 }
 
-func PrintTable(w io.Writer, v interface{}, f ...string) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
+func printYaml(w io.Writer, v interface{}) error {
+	// there is no case when the marshal method will return an error
+	b, _ := yaml.Marshal(v)
+
+	_, err := w.Write(b)
+
+	return err
+}
+
+func printTable(w io.Writer, headers []string, data [][]string) error {
+	table := tablewriter.NewWriter(w)
+	table.SetHeader(headers)
+	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
+	table.SetCenterSeparator("|")
+	table.SetBorder(false)
+
+	for i := range data {
+		if len(data[i]) != len(headers) {
+			return errors.New("number of headers is not equal to number of columns")
+		}
+		table.Append(data[i])
 	}
 
-	for i := range f {
-		b = []byte(gjson.GetBytes(b, f[i]).Raw)
-	}
-
-	val := reflect.New(reflect.TypeOf(v)).Interface()
-
-	err = json.Unmarshal(b, val)
-	if err != nil {
-		return err
-	}
-
-	p := tableprinter.New(w)
-
-	p.BorderTop = true
-	p.BorderBottom = true
-	p.BorderLeft = true
-	p.BorderRight = true
-	p.ColumnSeparator = "│"
-	p.RowSeparator = "─"
-
-	p.Print(val)
-
+	table.Render()
 	return nil
 }

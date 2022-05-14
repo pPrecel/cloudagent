@@ -1,364 +1,117 @@
 package output
 
 import (
+	"bytes"
 	"errors"
 	"testing"
-)
 
-type testData struct {
-	Name      string `json:"name" header:"name"`
-	Namespace string `json:"namespace" header:"namespace"`
-}
+	"github.com/stretchr/testify/assert"
+)
 
 var (
-	name1Filter = "#(name==Name1)#"
-
-	testDataTab = []testData{
-		{
-			Name:      "Name0",
-			Namespace: "Namespace0",
-		},
-		{
-			Name:      "Name1",
-			Namespace: "Namespace1",
-		},
-		{
-			Name:      "Name1",
-			Namespace: "Namespace2",
-		},
-		{
-			Name:      "Name1",
-			Namespace: "Namespace3",
-		},
-		{
-			Name:      "Name2",
-			Namespace: "Namespace2",
-		},
+	testData = struct {
+		Field1 string
+		Field2 int
+		Field3 interface{}
+	}{
+		Field1: "field1",
+		Field2: 2,
+		Field3: nil,
 	}
 
-	testDataString = `[
-    {
-        "name": "Name0",
-        "namespace": "Namespace0"
-    },
-    {
-        "name": "Name1",
-        "namespace": "Namespace1"
-    },
-    {
-        "name": "Name1",
-        "namespace": "Namespace2"
-    },
-    {
-        "name": "Name1",
-        "namespace": "Namespace3"
-    },
-    {
-        "name": "Name2",
-        "namespace": "Namespace2"
-    }
-]`
+	testDataJSON = "{\n    \"Field1\": \"field1\",\n    \"Field2\": 2,\n    \"Field3\": null\n}"
+	testDataYAML = "field1: field1\nfield2: 2\nfield3: null\n"
 
-	testDataName1String = `[{
-        "name": "Name1",
-        "namespace": "Namespace1"
-    },{
-        "name": "Name1",
-        "namespace": "Namespace2"
-    },{
-        "name": "Name1",
-        "namespace": "Namespace3"
-    }]`
+	testHeaders = []string{"NAME", "DESCRIPTION"}
+	testRows    = [][]string{
+		{"testName1", "description1"},
+		{"testName2", "description2"},
+	}
+	testWrongRows = [][]string{
+		{"testName1", "description1"},
+		{"testName2"},
+	}
 
-	testDataTable = ` ─────────── ──────────── 
-│ NAME (5)  │ NAMESPACE  │
- ─────────── ──────────── 
-│ Name0     │ Namespace0 │
-│ Name1     │ Namespace1 │
-│ Name1     │ Namespace2 │
-│ Name1     │ Namespace3 │
-│ Name2     │ Namespace2 │
- ─────────── ──────────── 
-`
-	testDataName1Table = ` ─────── ──────────── 
-│ NAME  │ NAMESPACE  │
- ─────── ──────────── 
-│ Name1 │ Namespace1 │
-│ Name1 │ Namespace2 │
-│ Name1 │ Namespace3 │
- ─────── ──────────── 
-`
+	testRowsRaw = "    NAME    | DESCRIPTION   \n------------|---------------\n  testName1 | description1  \n  testName2 | description2  \n"
 )
 
-type writer struct {
-	Val string
-	Err error
+type mockWriter struct {
+	val    []byte
+	rInt   int
+	rError error
 }
 
-func (w *writer) Write(b []byte) (int, error) {
-	w.Val += string(b)
-	return len(w.Val), w.Err
+func (w *mockWriter) Write(b []byte) (int, error) {
+	w.val = append(w.val, b...)
+	return w.rInt, w.rError
 }
 
-func TestPrintText(t *testing.T) {
-	type args struct {
-		w *writer
-		v interface{}
-		o TextOptions
-		f []string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantW   string
-		wantErr bool
-	}{
-		{
-			name: "print text",
-			args: args{
-				w: &writer{},
-				v: testDataTab,
-				o: TextOptions{
-					Format: "%r/%h/%u/%a",
-					RPath:  "#(name==Name0)#|#",
-					HPath:  "#(name==Namespace2)#|#",
-					UPath:  "#(name==Name3)#|#",
-					APath:  "#",
-				},
-			},
-			wantW:   "1/0/0/5",
-			wantErr: false,
-		},
-		{
-			name: "filters",
-			args: args{
-				w: &writer{},
-				v: testDataTab,
-				o: TextOptions{
-					Format: "%r/%h/%u/%a",
-					RPath:  "#(name==Name0)#|#",
-					HPath:  "#(name==Namespace2)#|#",
-					UPath:  "#(name==Name1)#|#",
-					APath:  "#(name==Name1)#|#",
-				},
-				f: []string{
-					"#(name==Name1)#",
-					"#(namespace=Namespace2)#",
-				},
-			},
-			wantW:   "0/0/1/3",
-			wantErr: false,
-		},
-		{
-			name: "marshal error",
-			args: args{
-				w: &writer{},
-				v: make(chan int),
-			},
-			wantW:   "",
-			wantErr: true,
-		},
-		{
-			name: "write error",
-			args: args{
-				w: &writer{
-					Err: errors.New("test error"),
-				},
-			},
-			wantW:   "",
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := PrintText(tt.args.w, tt.args.v, tt.args.o, tt.args.f...); (err != nil) != tt.wantErr {
-				t.Errorf("PrintText() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if gotW := tt.args.w.Val; gotW != tt.wantW {
-				t.Errorf("PrintText() = %v, want %v", gotW, tt.wantW)
-			}
+func Test_printText(t *testing.T) {
+	t.Run("print text", func(t *testing.T) {
+		w := &bytes.Buffer{}
+		assert.NoError(t, printText(w, "simple text"))
+		assert.Equal(t, "simple text", w.String())
+	})
+
+	t.Run("write error", func(t *testing.T) {
+		w := &mockWriter{
+			rError: errors.New("sample error"),
+		}
+		assert.Error(t, printText(w, "simple text"))
+	})
+}
+
+func Test_printJson(t *testing.T) {
+	t.Run("print json", func(t *testing.T) {
+		w := &bytes.Buffer{}
+		assert.NoError(t, printJson(w, &testData))
+		assert.Equal(t, testDataJSON, w.String())
+	})
+
+	t.Run("write error", func(t *testing.T) {
+		w := &mockWriter{
+			rError: errors.New("sample error"),
+		}
+		assert.Error(t, printJson(w, &testData))
+	})
+
+	t.Run("marshal error", func(t *testing.T) {
+		w := &bytes.Buffer{}
+		assert.Error(t, printJson(w, new(chan int)))
+	})
+}
+
+func Test_printYaml(t *testing.T) {
+	t.Run("print yaml", func(t *testing.T) {
+		w := &bytes.Buffer{}
+		assert.NoError(t, printYaml(w, &testData))
+		assert.Equal(t, testDataYAML, w.String())
+	})
+
+	t.Run("write error", func(t *testing.T) {
+		w := &mockWriter{
+			rError: errors.New("sample error"),
+		}
+		assert.Error(t, printYaml(w, &testData))
+	})
+
+	t.Run("marshal error", func(t *testing.T) {
+		w := &bytes.Buffer{}
+		assert.Panics(t, func() {
+			printYaml(w, make(chan int))
 		})
-	}
+	})
 }
 
-func TestPrintErrorText(t *testing.T) {
-	type args struct {
-		w *writer
-		o ErrorOptions
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantW   string
-		wantErr bool
-	}{
-		{
-			name: "print error",
-			args: args{
-				w: &writer{},
-				o: ErrorOptions{
-					Format: "ERR: %e",
-					Error:  "test error",
-				},
-			},
-			wantW:   "ERR: test error",
-			wantErr: false,
-		},
-		{
-			name: "write error",
-			args: args{
-				w: &writer{
-					Err: errors.New("test error"),
-				},
-			},
-			wantW:   "",
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := PrintErrorText(tt.args.w, tt.args.o); (err != nil) != tt.wantErr {
-				t.Errorf("PrintErrorText() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if gotW := tt.args.w.Val; gotW != tt.wantW {
-				t.Errorf("PrintErrorText() = %v, want %v", gotW, tt.wantW)
-			}
-		})
-	}
-}
+func Test_printTable(t *testing.T) {
+	t.Run("print table", func(t *testing.T) {
+		w := &bytes.Buffer{}
+		assert.NoError(t, printTable(w, testHeaders, testRows))
+		assert.Equal(t, testRowsRaw, w.String())
+	})
 
-func TestPrintJson(t *testing.T) {
-	type args struct {
-		w *writer
-		v interface{}
-		f []string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantW   string
-		wantErr bool
-	}{
-		{
-			name: "print json",
-			args: args{
-				w: &writer{},
-				v: testDataTab,
-			},
-			wantErr: false,
-			wantW:   testDataString,
-		},
-		{
-			name: "filter",
-			args: args{
-				w: &writer{},
-				v: testDataTab,
-				f: []string{
-					name1Filter,
-				},
-			},
-			wantErr: false,
-			wantW:   testDataName1String,
-		},
-		{
-			name: "marshal error",
-			args: args{
-				w: &writer{},
-				v: make(chan int),
-			},
-			wantW:   "",
-			wantErr: true,
-		},
-		{
-			name: "write error",
-			args: args{
-				w: &writer{
-					Err: errors.New("test error"),
-				},
-			},
-			wantW:   "null",
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := PrintJson(tt.args.w, tt.args.v, tt.args.f...); (err != nil) != tt.wantErr {
-				t.Errorf("PrintJson() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if gotW := tt.args.w.Val; gotW != tt.wantW {
-				t.Errorf("PrintJson() = '%v', want '%v'", gotW, tt.wantW)
-			}
-		})
-	}
-}
-
-func TestPrintTable(t *testing.T) {
-	type args struct {
-		w *writer
-		v interface{}
-		f []string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantW   string
-		wantErr bool
-	}{
-		{
-			name: "print table",
-			args: args{
-				w: &writer{},
-				v: testDataTab,
-			},
-			wantW:   testDataTable,
-			wantErr: false,
-		},
-		{
-			name: "filter",
-			args: args{
-				w: &writer{},
-				v: testDataTab,
-				f: []string{
-					name1Filter,
-				},
-			},
-			wantW:   testDataName1Table,
-			wantErr: false,
-		},
-		{
-			name: "marshal error",
-			args: args{
-				w: &writer{},
-				v: make(chan int),
-			},
-			wantW:   "",
-			wantErr: true,
-		},
-		{
-			name: "unmarshal error",
-			args: args{
-				w: &writer{},
-				v: testDataTab,
-				f: []string{
-					"#(", // wrong filter
-				},
-			},
-			wantW:   "",
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := PrintTable(tt.args.w, tt.args.v, tt.args.f...); (err != nil) != tt.wantErr {
-				t.Errorf("PrintTable() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if gotW := tt.args.w.Val; gotW != tt.wantW {
-				t.Errorf("PrintTable() = %v, want %v", gotW, tt.wantW)
-			}
-		})
-	}
+	t.Run("validation error", func(t *testing.T) {
+		w := &bytes.Buffer{}
+		assert.Error(t, printTable(w, testHeaders, testWrongRows))
+	})
 }

@@ -14,7 +14,7 @@ type options struct {
 	*command.Options
 
 	createdBy string
-	outFormat output.Output
+	outFormat output.Flag
 	timeout   time.Duration
 
 	socketAddress string
