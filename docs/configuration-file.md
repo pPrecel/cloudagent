@@ -2,6 +2,8 @@
 
 The Cloud Agent can be fully configured by creating the `.cloudagent.conf.yaml` file in the `${HOME}` directory. The file should contain information about the clouds you want to observe.
 
+The Cloud Agent has functionality of auto-detecting any change around the configuration file. It means that after every change in the configuration file, program will automatically fetch all changes.
+
 > **NOTE:** The configuration file can be easily maintained using JSON schema. To generate it use the `cloudagent config schema` command.
 
 The sample config file:

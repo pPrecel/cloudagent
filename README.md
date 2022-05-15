@@ -33,9 +33,7 @@ Visit the [releases page](https://github.com/pPrecel/cloudagent/releases) to dow
     brew install cloudagent
     ```
 
-2. Extend configuration ([see also](./docs/configuration-file.md)) in the `~/.cloudagent.conf.yaml` location.
-
-3. Start the `cloudagent` service:
+2. Start the `cloudagent` service:
 
     ```bash
     brew services start cloudagent
@@ -43,7 +41,7 @@ Visit the [releases page](https://github.com/pPrecel/cloudagent/releases) to dow
 
 ## Make use of it
 
-After installing, configuring, and starting the service process, cloudagent would fetch info from given clouds after ~60sec from start. To check that program is working correctly use:
+After installing and starting the service process you can pass configuration to immediately say agent which clouds should he observe (read more [here](./docs/configuration-file.md)). To check that program is working correctly use:
 
 ```bash
 cloudagent state
