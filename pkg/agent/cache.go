@@ -11,6 +11,7 @@ type RegisteredResource[T any] interface {
 type Cache[T any] interface {
 	Register(name string) RegisteredResource[T]
 	Resources() map[string]RegisteredResource[T]
+	Clean()
 }
 
 type cache[T any] struct {
@@ -31,6 +32,10 @@ func (c *cache[T]) Register(name string) RegisteredResource[T] {
 
 func (c *cache[T]) Resources() map[string]RegisteredResource[T] {
 	return c.resources
+}
+
+func (c *cache[T]) Clean() {
+	c.resources = map[string]RegisteredResource[T]{}
 }
 
 type resource[T any] struct {

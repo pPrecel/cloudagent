@@ -31,6 +31,9 @@ var (
 )
 
 func TestGetConfig(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	assert.True(t, ok)
+
 	type args struct {
 		path string
 	}
@@ -43,12 +46,7 @@ func TestGetConfig(t *testing.T) {
 		{
 			name: "read config",
 			args: args{
-				path: func() string {
-					_, filename, _, ok := runtime.Caller(0)
-					assert.True(t, ok)
-
-					return filepath.Join(filepath.Dir(filename), "/testdata/test.conf.yaml")
-				}(),
+				path: filepath.Join(filepath.Dir(filename), "/testdata/test.conf.yaml"),
 			},
 			want:    testdataConfig,
 			wantErr: false,
@@ -56,12 +54,7 @@ func TestGetConfig(t *testing.T) {
 		{
 			name: "empty config",
 			args: args{
-				path: func() string {
-					_, filename, _, ok := runtime.Caller(0)
-					assert.True(t, ok)
-
-					return filepath.Join(filepath.Dir(filename), "/testdata/empty.conf.yaml")
-				}(),
+				path: filepath.Join(filepath.Dir(filename), "/testdata/empty.conf.yaml"),
 			},
 			want:    &Config{},
 			wantErr: false,
@@ -77,12 +70,7 @@ func TestGetConfig(t *testing.T) {
 		{
 			name: "file is not a config",
 			args: args{
-				path: func() string {
-					_, filename, _, ok := runtime.Caller(0)
-					assert.True(t, ok)
-
-					return filepath.Join(filepath.Dir(filename), "/testdata/file.txt")
-				}(),
+				path: filepath.Join(filepath.Dir(filename), "/testdata/file.txt"),
 			},
 			want:    nil,
 			wantErr: true,

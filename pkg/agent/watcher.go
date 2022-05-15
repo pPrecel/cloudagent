@@ -15,7 +15,11 @@ type WatcherOptions struct {
 	Logger  *logrus.Logger
 }
 
-func NewWatcher(opts WatcherOptions, fn ...WatchFn) (*cron.Cron, error) {
+type Watcher struct {
+	c *cron.Cron
+}
+
+func NewWatcher(opts WatcherOptions, fn ...WatchFn) (*Watcher, error) {
 	cron := cron.New()
 
 	context := context.Background()
@@ -32,5 +36,22 @@ func NewWatcher(opts WatcherOptions, fn ...WatchFn) (*cron.Cron, error) {
 		}
 	}
 
-	return cron, nil
+	return &Watcher{
+		c: cron,
+	}, nil
+}
+
+func (w *Watcher) Start() {
+	go func() {
+		e := w.c.Entries()
+		for i := range e {
+			e[i].Job.Run()
+		}
+	}()
+
+	w.c.Start()
+}
+
+func (w *Watcher) Stop() context.Context {
+	return w.c.Stop()
 }

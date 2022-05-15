@@ -3,23 +3,17 @@ package serve
 import (
 	"context"
 	"io"
-	"net"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	v1beta1_apis "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	command "github.com/pPrecel/cloudagent/cmd"
-	"github.com/pPrecel/cloudagent/internal/gardener"
 	"github.com/pPrecel/cloudagent/pkg/agent"
 	"github.com/pPrecel/cloudagent/pkg/config"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 func TestNewCmd(t *testing.T) {
@@ -50,18 +44,6 @@ func TestNewCmd(t *testing.T) {
 var (
 	testNetwork = "unix"
 	testAddress = filepath.Join(os.TempDir(), "serve-test-socket.sock")
-
-	fixConfigFn = func(s string) (*config.Config, error) {
-		return &config.Config{
-			PersistentSpec: "@every 2m",
-			GardenerProjects: []config.GardenerProject{
-				{
-					Namespace:      "test-namespace",
-					KubeconfigPath: "path",
-				},
-			},
-		}, nil
-	}
 )
 
 func Test_run(t *testing.T) {
@@ -74,18 +56,9 @@ func Test_run(t *testing.T) {
 				Logger:  l,
 				Context: context.Background(),
 			},
+			configPath:    "/empty/path",
 			socketNetwork: testNetwork,
 			socketAddress: testAddress,
-			newSocket:     agent.NewSocket,
-			getConfig: func(s string) (*config.Config, error) {
-				return &config.Config{}, nil
-			},
-			newClusterConfig: func(s string) (*rest.Config, error) {
-				return fixRestClient()
-			},
-			newWatchFunc: func(l *logrus.Logger, c gardener.Client, s agent.RegisteredResource[*v1beta1.ShootList]) agent.WatchFn {
-				return func(ctx context.Context) {}
-			},
 		}
 		c := NewCmd(o)
 
@@ -110,138 +83,37 @@ func Test_run(t *testing.T) {
 		assert.True(t, socketExist, "socket does not exist")
 	})
 
-	t.Run("config error", func(t *testing.T) {
+	t.Run("socket error", func(t *testing.T) {
 		o := &options{
 			Options: &command.Options{
 				Logger:  l,
 				Context: context.Background(),
 			},
 			socketNetwork: testNetwork,
-			socketAddress: testAddress,
-			newSocket:     agent.NewSocket,
-			getConfig: func(s string) (*config.Config, error) {
-				return nil, errors.New("test error")
-			},
+			socketAddress: "/addr\n\n\n",
 		}
-		c := NewCmd(o)
 
-		err := c.PreRunE(c, []string{})
-		assert.NoError(t, err)
+		c := NewCmd(o)
 
 		assert.Error(t, c.RunE(c, []string{}))
 	})
+}
 
-	t.Run("cluster config error", func(t *testing.T) {
-		o := &options{
+func Test_startWatcher(t *testing.T) {
+	l := logrus.New()
+	l.Out = io.Discard
+
+	t.Run("handle error", func(t *testing.T) {
+		c := agent.NewCache[*v1beta1_apis.ShootList]()
+		startWatcher(&options{
 			Options: &command.Options{
 				Logger:  l,
 				Context: context.Background(),
 			},
 			socketNetwork: testNetwork,
 			socketAddress: testAddress,
-			getConfig:     fixConfigFn,
-			newSocket:     agent.NewSocket,
-			newClusterConfig: func(s string) (*rest.Config, error) {
-				return nil, errors.New("test error")
-			},
-		}
-		c := NewCmd(o)
+		}, c)
 
-		err := c.PreRunE(c, []string{})
-		assert.NoError(t, err)
-
-		assert.Error(t, c.RunE(c, []string{}))
+		assert.Len(t, c.Resources(), 0)
 	})
-
-	t.Run("wrong config error", func(t *testing.T) {
-		o := &options{
-			Options: &command.Options{
-				Logger:  l,
-				Context: context.Background(),
-			},
-			socketNetwork: testNetwork,
-			socketAddress: testAddress,
-			getConfig:     fixConfigFn,
-			newClusterConfig: func(s string) (*rest.Config, error) {
-				return fixWrongRestClient()
-			},
-		}
-		c := NewCmd(o)
-
-		err := c.PreRunE(c, []string{})
-		assert.NoError(t, err)
-
-		assert.Error(t, c.RunE(c, []string{}))
-	})
-
-	t.Run("wrong socket path", func(t *testing.T) {
-		o := &options{
-			Options: &command.Options{
-				Logger:  l,
-				Context: context.Background(),
-			},
-			newSocket: func(network, address string) (net.Listener, error) {
-				return nil, errors.New("test error")
-			},
-			getConfig: fixConfigFn,
-			newClusterConfig: func(s string) (*rest.Config, error) {
-				return fixRestClient()
-			},
-			newWatchFunc: func(l *logrus.Logger, c gardener.Client, s agent.RegisteredResource[*v1beta1.ShootList]) agent.WatchFn {
-				return func(ctx context.Context) {}
-			},
-		}
-		c := NewCmd(o)
-
-		err := c.PreRunE(c, []string{})
-		assert.NoError(t, err)
-
-		assert.Error(t, c.RunE(c, []string{}))
-	})
-}
-
-func fixWrongRestClient() (*rest.Config, error) {
-	client, err := fixRestClient()
-	if err != nil {
-		return nil, err
-	}
-
-	client.AuthProvider = &api.AuthProviderConfig{}
-	client.ExecProvider = &api.ExecConfig{}
-
-	return client, err
-}
-
-func fixRestClient() (*rest.Config, error) {
-	config := createValidTestConfig()
-
-	clientBuilder := clientcmd.NewNonInteractiveClientConfig(*config, "clean", &clientcmd.ConfigOverrides{
-		ClusterInfo: api.Cluster{
-			TLSServerName: "overridden-server-name",
-		},
-	}, nil)
-
-	return clientBuilder.ClientConfig()
-}
-
-func createValidTestConfig() *api.Config {
-	const (
-		server = "https://anything.com:8080"
-		token  = "the-token"
-	)
-
-	config := api.NewConfig()
-	config.Clusters["clean"] = &api.Cluster{
-		Server: server,
-	}
-	config.AuthInfos["clean"] = &api.AuthInfo{
-		Token: token,
-	}
-	config.Contexts["clean"] = &api.Context{
-		Cluster:  "clean",
-		AuthInfo: "clean",
-	}
-	config.CurrentContext = "clean"
-
-	return config
 }

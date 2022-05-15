@@ -21,42 +21,42 @@ var (
 
 func TestNewWatcher(t *testing.T) {
 	t.Run("empty watcher", func(t *testing.T) {
-		c, e := NewWatcher(WatcherOptions{
+		w, e := NewWatcher(WatcherOptions{
 			Context: context.Background(),
 			Logger:  logrus.New(),
 		})
 		assert.NoError(t, e)
-		assert.Equal(t, 0, len(c.Entries()))
+		assert.Equal(t, 0, len(w.c.Entries()))
 	})
 
 	t.Run("run two funcs", func(t *testing.T) {
 		counter := make(chan int)
 		m := sync.Mutex{}
-		c, e := NewWatcher(WatcherOptions{
+		w, e := NewWatcher(WatcherOptions{
 			Context: context.Background(),
 			Logger:  logrus.New(),
 			Spec:    "@every 2s",
 		}, counterFn(counter, &m), counterFn(counter, &m))
-		defer c.Stop()
+		defer w.Stop()
 
 		assert.NoError(t, e)
 
-		assert.Equal(t, 2, len(c.Entries()))
+		assert.Equal(t, 2, len(w.c.Entries()))
 
-		c.Start()
+		w.Start()
 
 		<-counter
 		<-counter
 	})
 
 	t.Run("nil fn", func(t *testing.T) {
-		c, e := NewWatcher(WatcherOptions{
+		w, e := NewWatcher(WatcherOptions{
 			Context: context.Background(),
 			Logger:  logrus.New(),
 			Spec:    "@every 15m",
 		}, nil)
 		assert.NoError(t, e)
-		assert.Equal(t, 1, len(c.Entries()))
+		assert.Equal(t, 1, len(w.c.Entries()))
 	})
 
 	t.Run("wrong spec", func(t *testing.T) {

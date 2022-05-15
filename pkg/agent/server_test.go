@@ -174,6 +174,8 @@ func Test_server_GardenerShoots(t *testing.T) {
 func fixShootListCache(s *v1beta1.ShootList) Cache[*v1beta1.ShootList] {
 	c := NewCache[*v1beta1.ShootList]()
 
+	c.Clean()
+
 	r := c.Register("test")
 	r.Set(s)
 

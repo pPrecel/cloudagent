@@ -2,11 +2,10 @@ package serve
 
 import (
 	v1beta1_apis "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	"github.com/pPrecel/cloudagent/internal/gardener"
+	"github.com/pPrecel/cloudagent/internal/watcher"
 	"github.com/pPrecel/cloudagent/pkg/agent"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
 	"github.com/pPrecel/cloudagent/pkg/config"
-	"github.com/robfig/cron/v3"
 	"github.com/spf13/cobra"
 	googlerpc "google.golang.org/grpc"
 )
@@ -32,26 +31,15 @@ func NewCmd(o *options) *cobra.Command {
 func run(o *options) error {
 	o.Logger.Info("starting gardeners agent")
 
-	o.Logger.Infof("reading config from path: '%s'", o.configPath)
-	cfg, err := o.getConfig(o.configPath)
-	if err != nil {
-		return err
-	}
-
 	gardenerCache := agent.NewCache[*v1beta1_apis.ShootList]()
-
-	o.Logger.Infof("starting state watcher with spec: '%s'", cfg.PersistentSpec)
-	watcher, err := buildWatcher(o, cfg, gardenerCache)
-	if err != nil {
-		return err
-	}
-	defer watcher.Stop()
-
-	o.Logger.Debug("starting watcher")
-	watcher.Start()
+	go func() {
+		for {
+			startWatcher(o, gardenerCache)
+		}
+	}()
 
 	o.Logger.Debug("configuring grpc server")
-	lis, err := o.newSocket(o.socketNetwork, o.socketAddress)
+	lis, err := agent.NewSocket(o.socketNetwork, o.socketAddress)
 	if err != nil {
 		return err
 	}
@@ -67,34 +55,18 @@ func run(o *options) error {
 	return grpcServer.Serve(lis)
 }
 
-func buildWatcher(o *options, config *config.Config, cache agent.Cache[*v1beta1_apis.ShootList]) (*cron.Cron, error) {
-	funcs := []agent.WatchFn{}
-	for i := range config.GardenerProjects {
-		p := config.GardenerProjects[i]
-
-		o.Logger.Debug("creating cluster config")
-		cfg, err := o.newClusterConfig(p.KubeconfigPath)
-		if err != nil {
-			return nil, err
-		}
-
-		o.Logger.Debug("creating gardener client")
-		c, err := gardener.NewClient(cfg)
-		if err != nil {
-			return nil, err
-		}
-
-		r := cache.Register(config.GardenerProjects[i].Namespace)
-
-		o.Logger.Debugf("creeating watcher func for namespace: '%s'", p.Namespace)
-		funcs = append(funcs,
-			o.newWatchFunc(o.Logger, c.Shoots(config.GardenerProjects[i].Namespace), r),
-		)
+func startWatcher(o *options, cache agent.Cache[*v1beta1_apis.ShootList]) {
+	if err := watcher.NewWatcher().Start(&watcher.Options{
+		Context:    o.Context,
+		Logger:     o.Logger,
+		Cache:      cache,
+		ConfigPath: o.configPath,
+	}); err != nil {
+		o.Logger.Warn(err)
 	}
 
-	return agent.NewWatcher(agent.WatcherOptions{
-		Spec:    config.PersistentSpec,
-		Context: o.Context,
-		Logger:  o.Logger,
-	}, funcs...)
+	o.Logger.Info("configuration midyfication detected")
+
+	o.Logger.Info("cleaning up cache")
+	cache.Clean()
 }
