@@ -21,7 +21,7 @@ jobs:
         go-version: 1.18
     - 
       name: Verify
-      run: make verify
+      run: make verify-ci
     - 
       name: Build
       run: make build

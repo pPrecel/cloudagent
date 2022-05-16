@@ -28,3 +28,10 @@ protobuf:
 .PHONY: verify
 verify:
 	@./hack/verify.sh
+
+.PHONY: verify-proto
+verify-proto:
+	@./hack/verify-proto.sh
+
+.PHONY: verify-ci
+verify-ci: verify verify-proto
