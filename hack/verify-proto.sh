@@ -10,7 +10,7 @@ fi
 
 echo ">==( protobuf verify )==="
 
-trap "git reset --hard" EXIT
+trap "git reset --hard" ERR
 
 make -C "${SCRIPTPATH}/.." protobuf
 
