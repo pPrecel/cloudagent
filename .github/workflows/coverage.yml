@@ -25,7 +25,7 @@ jobs:
         uses: jandelgado/gcov2lcov-action@v1.0.6
         env:
           # add GOROOT env manually because of failing tests
-          GOROOT: "/opt/hostedtoolcache/go/1.18.1/x64"
+          GOROOT: "/opt/hostedtoolcache/go/1.18.2/x64"
       - 
         name: Coveralls
         uses: coverallsapp/github-action@v1.1.2
