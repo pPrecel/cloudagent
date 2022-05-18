@@ -22,16 +22,18 @@ func NewCmd(o *options) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&o.createdBy, "createdBy", "c", "", "Show clusters created by specific person.")
-	cmd.Flags().VarP(output.NewFlag(&o.outFormat, "table", "$r/$h/$u/$a", "-/-/-/-"), "output", "o", `Provides format for the output information. 
+	cmd.Flags().StringVarP(&o.createdBy, "created-by", "c", "", "Show clusters created by specific person.")
+	cmd.Flags().VarP(output.NewFlag(&o.outFormat, "table", "$r/$h/$x/$a", "-/-/-/-"), "output", "o", `Provides format for the output information. 
 	
 For the 'text' output format you can specifie two more informations by spliting them using '='. The first one would be used as output format and second as error format.
 
 The first one can contains at least on out of four elements where:
-- '`+formater.TextRunningFormat+`' represents number of running clusters, 
-- '`+formater.TextHibernatedFormat+`' represents number of hibernated clusters, 
-- '`+formater.TextHibernatedFormat+`' represents number of cluster with unknown status, 
-- '`+formater.TextAllFormat+`' represents of all cluster in namespace.
+- '`+formater.TextHealthyFormat+`' represents number of clusters with the HEALTHY status,
+- '`+formater.TextHibernatedFormat+`' represents number of clusters with the HIBERNATED status,
+- '`+formater.TextUnknownFormat+`' represents number of clusters with the UNKNOWN status,
+- '`+formater.TextEmptyFormat+`' represents number of clusters with the EMPTY status,
+- '`+formater.TextEmptyUnknownFormat+`' represents number of clusters with the EMPTY or the UNKNOWN status,
+- '`+formater.TextAllFormat+`' represents of all clusters in namespace.
 
 The second one can contains '`+formater.TextErrorFormat+`'  which will be replaced with error message.`)
 	cmd.Flags().DurationVarP(&o.timeout, "timeout", "t", 2*time.Second, "Provides timeout for the command.")

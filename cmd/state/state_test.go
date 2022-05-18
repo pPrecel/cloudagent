@@ -25,13 +25,13 @@ func TestNewCmd(t *testing.T) {
 
 	t.Run("defaults", func(t *testing.T) {
 		assert.Equal(t, "", o.createdBy)
-		assert.Equal(t, *output.NewFlag(&output.Flag{}, "table", "$r/$h/$u/$a", "-/-/-/-"), o.outFormat)
+		assert.Equal(t, *output.NewFlag(&output.Flag{}, "table", "$r/$h/$x/$a", "-/-/-/-"), o.outFormat)
 		assert.Equal(t, 2*time.Second, o.timeout)
 	})
 
 	t.Run("parse flags", func(t *testing.T) {
 		c.ParseFlags([]string{
-			"--createdBy", "owner",
+			"--created-by", "owner",
 			"--output", "text=$a=$e",
 			"--timeout", "5s",
 		})

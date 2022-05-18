@@ -9,23 +9,46 @@ import (
 )
 
 const (
-	createdByLabel       = `gardener.cloud/created-by`
-	TextAllFormat        = "$a"
-	TextUnknownFormat    = "$u"
-	TextRunningFormat    = "$r"
-	TextHibernatedFormat = "$h"
-	TextErrorFormat      = "$e"
+	createdByLabel         = `gardener.cloud/created-by`
+	TextAllFormat          = "$a"
+	TextUnknownFormat      = "$u"
+	TextHealthyFormat      = "$r"
+	TextHibernatedFormat   = "$h"
+	TextEmptyFormat        = "$e"
+	TextEmptyUnknownFormat = "$x"
+	TextErrorFormat        = "$E"
 )
 
 var (
 	headers = []string{"NAME", "CREATED BY", "CONDITION"}
+
+	preDirectives = directiveMap{
+		TextAllFormat: func(_ *cloud_agent.Shoot) bool {
+			return true
+		},
+	}
+
+	postDirectives = directiveMap{
+		TextEmptyUnknownFormat: func(s *cloud_agent.Shoot) bool {
+			return s.Condition == cloud_agent.Condition_EMPTY ||
+				s.Condition == cloud_agent.Condition_UNKNOWN
+		},
+		TextUnknownFormat: func(s *cloud_agent.Shoot) bool {
+			return s.Condition == cloud_agent.Condition_UNKNOWN
+		},
+		TextHealthyFormat: func(s *cloud_agent.Shoot) bool {
+			return s.Condition == cloud_agent.Condition_HEALTHY
+		},
+		TextHibernatedFormat: func(s *cloud_agent.Shoot) bool {
+			return s.Condition == cloud_agent.Condition_HIBERNATED
+		},
+		TextEmptyFormat: func(s *cloud_agent.Shoot) bool {
+			return s.Condition == cloud_agent.Condition_EMPTY
+		},
+	}
 )
 
 var _ output.Formater = &state{}
-
-type Filters struct {
-	CreatedBy string
-}
 
 type state struct {
 	err     error
@@ -46,10 +69,7 @@ func (s *state) YAML() interface{} {
 		return map[string]interface{}{}
 	}
 
-	shoots := s.shoots
-	if s.filters.CreatedBy != "" {
-		shoots = shootsCreatedBy(shoots, s.filters.CreatedBy)
-	}
+	shoots := s.filters.filter(s.shoots)
 
 	return map[string]interface{}{
 		"shoots": shoots.Shoots,
@@ -61,10 +81,7 @@ func (s *state) JSON() interface{} {
 		return map[string]interface{}{}
 	}
 
-	shoots := s.shoots
-	if s.filters.CreatedBy != "" {
-		shoots = shootsCreatedBy(shoots, s.filters.CreatedBy)
-	}
+	shoots := s.filters.filter(s.shoots)
 
 	return map[string]interface{}{
 		"shoots": shoots.Shoots,
@@ -78,10 +95,7 @@ func (s *state) Table() ([]string, [][]string) {
 		return headers, rows
 	}
 
-	shoots := s.shoots
-	if s.filters.CreatedBy != "" {
-		shoots = shootsCreatedBy(shoots, s.filters.CreatedBy)
-	}
+	shoots := s.filters.filter(s.shoots)
 
 	for i := range shoots.Shoots {
 		shoot := shoots.Shoots[i]
@@ -105,38 +119,46 @@ func (s *state) Text(outFormat, errFormat string) string {
 		return strings.ReplaceAll(errFormat, TextErrorFormat, s.err.Error())
 	}
 
-	str := outFormat
-
-	l := len(s.shoots.Shoots)
-	str = strings.ReplaceAll(str, TextAllFormat, strconv.Itoa(l))
-
 	shoots := s.shoots
-	if s.filters.CreatedBy != "" {
-		shoots = shootsCreatedBy(shoots, s.filters.CreatedBy)
+	directives := preDirectives.run(shoots, map[string]int{})
+
+	shoots = s.filters.filter(shoots)
+
+	directives = postDirectives.run(shoots, directives)
+
+	str := outFormat
+	for key, val := range directives {
+		str = strings.ReplaceAll(str, key, strconv.Itoa(val))
 	}
-
-	r := 0
-	h := 0
-	u := 0
-	for i := range shoots.Shoots {
-		if shoots.Shoots[i] == nil {
-			continue
-		}
-
-		if shoots.Shoots[i].Condition == cloud_agent.Condition_HEALTHY {
-			r++
-		} else if shoots.Shoots[i].Condition == cloud_agent.Condition_HIBERNATED {
-			h++
-		} else if shoots.Shoots[i].Condition == cloud_agent.Condition_UNKNOWN {
-			u++
-		}
-	}
-
-	str = strings.ReplaceAll(str, TextRunningFormat, strconv.Itoa(r))
-	str = strings.ReplaceAll(str, TextHibernatedFormat, strconv.Itoa(h))
-	str = strings.ReplaceAll(str, TextUnknownFormat, strconv.Itoa(u))
 
 	return str
+}
+
+type directiveMap map[string]func(*cloud_agent.Shoot) bool
+
+func (d directiveMap) run(s *cloud_agent.ShootList, m map[string]int) map[string]int {
+	for key, val := range d {
+		m[key] = 0
+
+		for i := range s.Shoots {
+			if s.Shoots[i] != nil && val(s.Shoots[i]) {
+				m[key]++
+			}
+		}
+	}
+
+	return m
+}
+
+type Filters struct {
+	CreatedBy string
+}
+
+func (f *Filters) filter(s *cloud_agent.ShootList) *cloud_agent.ShootList {
+	if f.CreatedBy != "" {
+		s = shootsCreatedBy(s, f.CreatedBy)
+	}
+	return s
 }
 
 func shootsCreatedBy(s *cloud_agent.ShootList, c string) *cloud_agent.ShootList {

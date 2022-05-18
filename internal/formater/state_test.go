@@ -34,6 +34,12 @@ var (
 				},
 				Condition: 3,
 			},
+			{
+				Name: "test4",
+				Annotations: map[string]string{
+					createdByLabel: "me2",
+				},
+			},
 			nil,
 			nil,
 		},
@@ -55,6 +61,7 @@ var (
 		{"test", "me", "HEALTHY"},
 		{"test2", "me2", "HIBERNATED"},
 		{"test3", "me2", "UNKNOWN"},
+		{"test4", "me2", "EMPTY"},
 	}
 
 	testFilteredRows = [][]string{
@@ -231,9 +238,9 @@ func Test_state_Text(t *testing.T) {
 			},
 			args: args{
 				outFormat: "$r $h $u $a",
-				errFormat: " $e ",
+				errFormat: " $E ",
 			},
-			want: "1 1 1 5",
+			want: "1 1 1 4",
 		},
 		{
 			name: "with error",
@@ -242,7 +249,7 @@ func Test_state_Text(t *testing.T) {
 			},
 			args: args{
 				outFormat: "$r $h $u $a",
-				errFormat: "$e.",
+				errFormat: "$E.",
 			},
 			want: "test error.",
 		},
@@ -255,10 +262,10 @@ func Test_state_Text(t *testing.T) {
 				},
 			},
 			args: args{
-				outFormat: "$r $h $u $a",
-				errFormat: " $e ",
+				outFormat: "$r $h $u $a $e $x",
+				errFormat: " $E ",
 			},
-			want: "0 1 1 5",
+			want: "0 1 1 4 1 2",
 		},
 	}
 	for _, tt := range tests {

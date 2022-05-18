@@ -23,7 +23,7 @@ func NewCmd(o *options) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&o.configPath, "configPath", "c", config.ConfigPath, "Provides path to the config file.")
+	cmd.Flags().StringVarP(&o.configPath, "config-path", "c", config.ConfigPath, "Provides path to the config file.")
 
 	return cmd
 }

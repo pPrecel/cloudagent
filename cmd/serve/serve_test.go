@@ -26,7 +26,7 @@ func TestNewCmd(t *testing.T) {
 
 	t.Run("parse flags", func(t *testing.T) {
 		c.ParseFlags([]string{
-			"--configPath", "path",
+			"--config-path", "path",
 		})
 
 		assert.Equal(t, "path", o.configPath)
