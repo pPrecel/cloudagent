@@ -28,8 +28,9 @@ func NewWatcher(opts WatcherOptions, fn ...WatchFn) (*Watcher, error) {
 	}
 
 	for i := range fn {
+		f := fn[i]
 		_, err := cron.AddFunc(opts.Spec, func() {
-			fn[i](context)
+			f(context)
 		})
 		if err != nil {
 			return nil, err

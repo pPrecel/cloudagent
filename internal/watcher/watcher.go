@@ -70,7 +70,7 @@ func (w *watcher) newWatcher(o *Options) (*agent.Watcher, error) {
 	for i := range config.GardenerProjects {
 		p := config.GardenerProjects[i]
 
-		o.Logger.Debug("creating cluster config")
+		o.Logger.Debugf("creating cluster config for kubeconfig: %s", p.KubeconfigPath)
 		cfg, err := w.newClusterConfig(p.KubeconfigPath)
 		if err != nil {
 			return nil, err
@@ -82,11 +82,11 @@ func (w *watcher) newWatcher(o *Options) (*agent.Watcher, error) {
 			return nil, err
 		}
 
-		r := o.Cache.Register(config.GardenerProjects[i].Namespace)
+		r := o.Cache.Register(p.Namespace)
 
 		o.Logger.Debugf("creeating watcher func for namespace: '%s'", p.Namespace)
 		funcs = append(funcs,
-			gardener.NewWatchFunc(o.Logger, c.Shoots(config.GardenerProjects[i].Namespace), r),
+			gardener.NewWatchFunc(o.Logger, c.Shoots(p.Namespace), r),
 		)
 	}
 

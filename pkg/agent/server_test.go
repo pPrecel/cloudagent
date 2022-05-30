@@ -69,6 +69,28 @@ var (
 			{},
 		},
 	}
+	testGardenerShootList2 = &v1beta1.ShootList{
+		Items: []v1beta1.Shoot{
+			{
+				ObjectMeta: v1.ObjectMeta{
+					Name:      "name1",
+					Namespace: "namespace2",
+					Labels: map[string]string{
+						"label1": "val1",
+						"label2": "val2",
+					},
+					Annotations: map[string]string{
+						"annotation1": "val1",
+						"annotation2": "val2",
+					},
+				},
+				Status: v1beta1.ShootStatus{
+					IsHibernated: true,
+				},
+			},
+		},
+	}
+
 	testAgentShootList = &cloud_agent.ShootList{
 		Shoots: []*cloud_agent.Shoot{
 			{
@@ -101,6 +123,23 @@ var (
 				Condition: cloud_agent.Condition_UNKNOWN,
 			},
 			{},
+		},
+	}
+	testAgentShootList2 = &cloud_agent.ShootList{
+		Shoots: []*cloud_agent.Shoot{
+			{
+				Name:      "name1",
+				Namespace: "namespace2",
+				Labels: map[string]string{
+					"label1": "val1",
+					"label2": "val2",
+				},
+				Annotations: map[string]string{
+					"annotation1": "val1",
+					"annotation2": "val2",
+				},
+				Condition: cloud_agent.Condition_HIBERNATED,
+			},
 		},
 	}
 )
@@ -152,6 +191,17 @@ func Test_server_GardenerShoots(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name: "multiple cache keys",
+			fields: fields{
+				gardenerCache: fixShootListCache2(),
+				logger:        logrus.New(),
+			},
+			want: &cloud_agent.ShootList{
+				Shoots: append(testAgentShootList.Shoots, testAgentShootList2.Shoots...),
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -178,6 +228,15 @@ func fixShootListCache(s *v1beta1.ShootList) Cache[*v1beta1.ShootList] {
 
 	r := c.Register("test")
 	r.Set(s)
+
+	return c
+}
+
+func fixShootListCache2() Cache[*v1beta1.ShootList] {
+	c := fixShootListCache(testGardenerShootList)
+
+	r := c.Register("test2")
+	r.Set(testGardenerShootList2)
 
 	return c
 }
