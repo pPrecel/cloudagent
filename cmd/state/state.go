@@ -47,7 +47,7 @@ func run(o *options) error {
 
 	o.Logger.Debugf("received: %+v, error: %v", list, err)
 
-	f := formater.NewForState(err, list, formater.Filters{
+	f := formater.NewGardener(err, list, formater.Filters{
 		CreatedBy: o.createdBy,
 	})
 

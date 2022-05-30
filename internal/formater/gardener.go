@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	gardenerProvider       = "Gardener"
 	createdByLabel         = `gardener.cloud/created-by`
 	TextAllFormat          = "$a"
 	TextUnknownFormat      = "$u"
@@ -20,7 +21,7 @@ const (
 )
 
 var (
-	headers = []string{"NAME", "CREATED BY", "CONDITION"}
+	headers = []string{"PROJECT", "NAME", "CREATED BY", "CONDITION", "PROVIDER"}
 
 	preDirectives = directiveMap{
 		TextAllFormat: func(_ *cloud_agent.Shoot) bool {
@@ -48,23 +49,23 @@ var (
 	}
 )
 
-var _ output.Formater = &state{}
+var _ output.Formater = &gardenerFormater{}
 
-type state struct {
+type gardenerFormater struct {
 	err     error
 	filters Filters
 	shoots  *cloud_agent.ShootList
 }
 
-func NewForState(err error, shoots *cloud_agent.ShootList, filters Filters) output.Formater {
-	return &state{
+func NewGardener(err error, shoots *cloud_agent.ShootList, filters Filters) output.Formater {
+	return &gardenerFormater{
 		err:     err,
 		shoots:  shoots,
 		filters: filters,
 	}
 }
 
-func (s *state) YAML() interface{} {
+func (s *gardenerFormater) YAML() interface{} {
 	if s.err != nil {
 		return map[string]interface{}{}
 	}
@@ -76,7 +77,7 @@ func (s *state) YAML() interface{} {
 	}
 }
 
-func (s *state) JSON() interface{} {
+func (s *gardenerFormater) JSON() interface{} {
 	if s.err != nil {
 		return map[string]interface{}{}
 	}
@@ -88,7 +89,7 @@ func (s *state) JSON() interface{} {
 	}
 }
 
-func (s *state) Table() ([]string, [][]string) {
+func (s *gardenerFormater) Table() ([]string, [][]string) {
 	rows := [][]string{}
 
 	if s.err != nil {
@@ -105,16 +106,18 @@ func (s *state) Table() ([]string, [][]string) {
 		}
 
 		rows = append(rows, []string{
+			shoot.Namespace,
 			shoot.Name,
 			shoot.Annotations[createdByLabel],
 			shoot.Condition.String(),
+			gardenerProvider,
 		})
 	}
 
 	return headers, rows
 }
 
-func (s *state) Text(outFormat, errFormat string) string {
+func (s *gardenerFormater) Text(outFormat, errFormat string) string {
 	if s.err != nil {
 		return strings.ReplaceAll(errFormat, TextErrorFormat, s.err.Error())
 	}

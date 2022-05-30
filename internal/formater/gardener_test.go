@@ -58,14 +58,14 @@ var (
 	}
 
 	testRows = [][]string{
-		{"test", "me", "HEALTHY"},
-		{"test2", "me2", "HIBERNATED"},
-		{"test3", "me2", "UNKNOWN"},
-		{"test4", "me2", "EMPTY"},
+		{"", "test", "me", "HEALTHY", "Gardener"},
+		{"test-namespace", "test2", "me2", "HIBERNATED", "Gardener"},
+		{"test-namespace", "test3", "me2", "UNKNOWN", "Gardener"},
+		{"", "test4", "me2", "EMPTY", "Gardener"},
 	}
 
 	testFilteredRows = [][]string{
-		{"test", "me", "HEALTHY"},
+		{"", "test", "me", "HEALTHY", "Gardener"},
 	}
 )
 
@@ -111,7 +111,7 @@ func Test_state_YAML(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := NewForState(tt.fields.err, tt.fields.shoots, tt.fields.filters)
+			s := NewGardener(tt.fields.err, tt.fields.shoots, tt.fields.filters)
 			assert.Equal(t, tt.want, s.YAML())
 		})
 	}
@@ -159,7 +159,7 @@ func Test_state_JSON(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := NewForState(tt.fields.err, tt.fields.shoots, tt.fields.filters)
+			s := NewGardener(tt.fields.err, tt.fields.shoots, tt.fields.filters)
 			assert.Equal(t, tt.want, s.JSON())
 		})
 	}
@@ -207,7 +207,7 @@ func Test_state_Table(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := NewForState(tt.fields.err, tt.fields.shoots, tt.fields.filters)
+			s := NewGardener(tt.fields.err, tt.fields.shoots, tt.fields.filters)
 			got, got1 := s.Table()
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, tt.want1, got1)
@@ -270,7 +270,7 @@ func Test_state_Text(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := NewForState(tt.fields.err, tt.fields.shoots, tt.fields.filters)
+			s := NewGardener(tt.fields.err, tt.fields.shoots, tt.fields.filters)
 			assert.Equal(t, tt.want, s.Text(tt.args.outFormat, tt.args.errFormat))
 		})
 	}
