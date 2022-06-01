@@ -49,13 +49,9 @@ cloudagent state
 
 > **NOTE:** I really recommend you to use `--help` for all commands to familiarize with all functionalities. Logs from running service are stored in `/tmp/cloudagent/cloudagent.stdout` and you can use for example `cat` program to read all of them.
 
-## Integration with tmux
+## Integrations
 
-To add this application to tmux put the line below in the `~/.tmux.conf` file:
-
-```text
-set -ag status-right ' #(cloudagent state --createdBy <OWNER_NAME> -o text) '
-```
+The cloudagent may be integrated with other tools like the tmux to observe clusters or the vscode to easily extend the `.cloudagent.conf.yml` file ( read more [here](./docs/integrations.md) ).
 
 ## Contribution
 
