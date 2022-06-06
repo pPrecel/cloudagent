@@ -21,8 +21,8 @@ func main() {
 	cmd := &cobra.Command{
 		Use:          "cloudagent",
 		SilenceUsage: true,
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			if o.Verbose == true {
+		PersistentPreRun: func(_ *cobra.Command, _ []string) {
+			if o.Verbose {
 				o.Logger.SetLevel(logrus.DebugLevel)
 			}
 		},
