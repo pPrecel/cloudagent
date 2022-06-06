@@ -45,7 +45,10 @@ func TestNotifyChange(t *testing.T) {
 
 func Test_handleEvent(t *testing.T) {
 	t.Run("error", func(t *testing.T) {
-		w := &fsnotify.Watcher{}
+		w := &fsnotify.Watcher{
+			Errors: make(chan error),
+			Events: make(chan fsnotify.Event),
+		}
 
 		n := &Notifier{
 			Errors:     make(chan error),
@@ -55,9 +58,6 @@ func Test_handleEvent(t *testing.T) {
 
 		go handleEvent(n, w)
 
-		go func() {
-			w.Errors <- errors.New("test error")
-		}()
-
+		w.Errors <- errors.New("test error")
 	})
 }
