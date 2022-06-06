@@ -1,4 +1,4 @@
-package schema
+package config
 
 import (
 	"bytes"
@@ -8,18 +8,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewCmd(o *options) *cobra.Command {
+func newSchemaCmd(o *schemaOptions) *cobra.Command {
 	return &cobra.Command{
 		Use:   "schema",
 		Short: "Generate the config JSON schema.",
 		Long:  "Use this command to generate a config JSON schema.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return run(o)
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return runSchema(o)
 		},
 	}
 }
 
-func run(o *options) error {
+func runSchema(o *schemaOptions) error {
 	b, err := o.jsonSchema()
 	if err != nil {
 		return errors.New("can't reflect schema")

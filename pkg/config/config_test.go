@@ -1,6 +1,9 @@
 package config
 
 import (
+	"errors"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -30,7 +33,7 @@ var (
 	}
 )
 
-func TestGetConfig(t *testing.T) {
+func TestRead(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
 	assert.True(t, ok)
 
@@ -78,7 +81,7 @@ func TestGetConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetConfig(tt.args.path)
+			got, err := Read(tt.args.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -88,4 +91,20 @@ func TestGetConfig(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestWrite(t *testing.T) {
+	f, err := ioutil.TempFile(os.TempDir(), "cloudagent-testwrite-")
+	assert.NoError(t, err)
+
+	t.Run("write", func(t *testing.T) {
+		assert.NoError(t, Write(f.Name(), &Config{}))
+	})
+
+	t.Run("marshal error", func(t *testing.T) {
+		m := func(interface{}) ([]byte, error) {
+			return []byte{}, errors.New("test error")
+		}
+		assert.Error(t, write(m, f.Name(), nil))
+	})
 }
