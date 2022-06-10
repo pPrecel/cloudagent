@@ -7,6 +7,7 @@ import (
 	command "github.com/pPrecel/cloudagent/cmd"
 	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v3"
 )
 
 type options struct {
@@ -15,6 +16,7 @@ type options struct {
 	configPath string
 
 	stdout      io.Writer
+	marshal     func(interface{}) ([]byte, error)
 	readConfig  func(string) (*config.Config, error)
 	writeConfig func(string, interface{}) error
 }
@@ -23,6 +25,7 @@ func NewOptions(o *command.Options) *options {
 	return &options{
 		Options:     o,
 		stdout:      os.Stdout,
+		marshal:     yaml.Marshal,
 		readConfig:  config.Read,
 		writeConfig: config.Write,
 	}

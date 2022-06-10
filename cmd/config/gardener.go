@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+
 	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -28,7 +30,7 @@ func newGardenerCmd(o *gardenerOptions) *cobra.Command {
 			case delArg:
 				return o.validateDel()
 			}
-			return nil
+			return errors.New(fmt.Sprintf("unsupported argument: %s", args[0]))
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
 			switch args[0] {
@@ -37,7 +39,7 @@ func newGardenerCmd(o *gardenerOptions) *cobra.Command {
 			case delArg:
 				return runDelGardener(o)
 			}
-			return nil
+			return errors.New(fmt.Sprintf("unsupported argument: %s", args[0]))
 		},
 	}
 
@@ -74,7 +76,7 @@ func runDelGardener(o *gardenerOptions) error {
 		}
 	}
 
-	if len(projects) == len(c.GardenerProjects) {
+	if len(projects) == len(c.GardenerProjects) || len(c.GardenerProjects) == 0 {
 		return errors.New("can't find a project which meets all requirements")
 	}
 

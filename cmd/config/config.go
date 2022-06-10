@@ -4,7 +4,6 @@ import (
 	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 func NewCmd(o *options) *cobra.Command {
@@ -33,7 +32,7 @@ func run(o *options) error {
 		return errors.Wrap(err, "while reading config file")
 	}
 
-	b, err := yaml.Marshal(c)
+	b, err := o.marshal(c)
 	if err != nil {
 		return errors.Wrap(err, "while verifying config structure")
 	}
