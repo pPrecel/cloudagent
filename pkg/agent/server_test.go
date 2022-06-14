@@ -2,12 +2,12 @@ package agent
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -198,7 +198,7 @@ func Test_server_GardenerShoots(t *testing.T) {
 				logger:        logrus.New(),
 			},
 			want: &cloud_agent.ShootList{
-				Shoots: append(testAgentShootList.Shoots, testAgentShootList2.Shoots...),
+				Shoots: append(testAgentShootList2.Shoots, testAgentShootList.Shoots...),
 			},
 			wantErr: false,
 		},
@@ -214,8 +214,9 @@ func Test_server_GardenerShoots(t *testing.T) {
 				t.Errorf("server.GardenerShoots() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("server.GardenerShoots() = %v, want %v", got, tt.want)
+
+			if tt.want != nil {
+				assert.ElementsMatch(t, got.Shoots, tt.want.Shoots)
 			}
 		})
 	}

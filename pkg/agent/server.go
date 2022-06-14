@@ -32,11 +32,11 @@ func NewServer(opts *ServerOption) cloud_agent.AgentServer {
 func (s *server) GardenerShoots(ctx context.Context, _ *cloud_agent.Empty) (*cloud_agent.ShootList, error) {
 	s.logger.Debug("handling request")
 
-	v1beta1List := &v1beta1.ShootList{}
 	if s.gardenerCache == nil {
 		return nil, errors.New("can't get latest shoots list")
 	}
 
+	v1beta1List := &v1beta1.ShootList{}
 	r := s.gardenerCache.Resources()
 	for key := range r {
 		if r[key] != nil && r[key].Get() != nil {
