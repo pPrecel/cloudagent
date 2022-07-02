@@ -23,13 +23,13 @@ const (
 var (
 	gardenerHeaders = []string{"PROJECT", "NAME", "CREATED BY", "CONDITION", "PROVIDER"}
 
-	preDirectives = gardenerDirectiveMap{
+	preGardenerDirectives = gardenerDirectiveMap{
 		GardenerTextAllFormat: func(_ *cloud_agent.Shoot) bool {
 			return true
 		},
 	}
 
-	postDirectives = gardenerDirectiveMap{
+	postGardenerDirectives = gardenerDirectiveMap{
 		GardenerTextEmptyUnknownFormat: func(s *cloud_agent.Shoot) bool {
 			return s.Condition == cloud_agent.Condition_EMPTY ||
 				s.Condition == cloud_agent.Condition_UNKNOWN
@@ -123,11 +123,11 @@ func (f *gardenerFormater) Text(outFormat, errFormat string) string {
 	}
 
 	shoots := f.shoots
-	directives := preDirectives.run(shoots, map[string]int{})
+	directives := preGardenerDirectives.run(shoots, map[string]int{})
 
 	shoots = f.filters.filter(shoots)
 
-	directives = postDirectives.run(shoots, directives)
+	directives = postGardenerDirectives.run(shoots, directives)
 
 	str := outFormat
 	for key, val := range directives {
