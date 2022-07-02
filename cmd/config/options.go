@@ -5,6 +5,7 @@ import (
 	"os"
 
 	command "github.com/pPrecel/cloudagent/cmd"
+	"github.com/pPrecel/cloudagent/internal/output"
 	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
@@ -13,6 +14,7 @@ import (
 type options struct {
 	*command.Options
 
+	outFormat  output.Flag
 	configPath string
 
 	stdout      io.Writer

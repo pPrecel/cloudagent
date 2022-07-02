@@ -28,14 +28,14 @@ func NewCmd(o *options) *cobra.Command {
 For the 'text' output format you can specifie two more informations by spliting them using '='. The first one would be used as output format and second as error format.
 
 The first one can contains at least on out of four elements where:
-- '`+formater.TextHealthyFormat+`' represents number of clusters with the HEALTHY status,
-- '`+formater.TextHibernatedFormat+`' represents number of clusters with the HIBERNATED status,
-- '`+formater.TextUnknownFormat+`' represents number of clusters with the UNKNOWN status,
-- '`+formater.TextEmptyFormat+`' represents number of clusters with the EMPTY status,
-- '`+formater.TextEmptyUnknownFormat+`' represents number of clusters with the EMPTY or the UNKNOWN status,
-- '`+formater.TextAllFormat+`' represents of all clusters in namespace.
+- '`+formater.GardenerTextHealthyFormat+`' represents number of clusters with the HEALTHY status,
+- '`+formater.GardenerTextHibernatedFormat+`' represents number of clusters with the HIBERNATED status,
+- '`+formater.GardenerTextUnknownFormat+`' represents number of clusters with the UNKNOWN status,
+- '`+formater.GardenerTextEmptyFormat+`' represents number of clusters with the EMPTY status,
+- '`+formater.GardenerTextEmptyUnknownFormat+`' represents number of clusters with the EMPTY or the UNKNOWN status,
+- '`+formater.GardenerTextAllFormat+`' represents of all clusters in namespace.
 
-The second one can contains '`+formater.TextErrorFormat+`'  which will be replaced with error message.`)
+The second one can contains '`+formater.GardenerTextErrorFormat+`'  which will be replaced with error message.`)
 	cmd.Flags().DurationVarP(&o.timeout, "timeout", "t", 2*time.Second, "Provides timeout for the command.")
 
 	return cmd

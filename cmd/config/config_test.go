@@ -140,7 +140,7 @@ func Test_run(t *testing.T) {
 					return o
 				}(),
 			},
-			wantErr: true,
+			wantErr: false, // expected
 		},
 	}
 	for _, tt := range tests {

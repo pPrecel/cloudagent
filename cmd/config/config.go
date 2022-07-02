@@ -1,6 +1,8 @@
 package config
 
 import (
+	"github.com/pPrecel/cloudagent/internal/formater"
+	"github.com/pPrecel/cloudagent/internal/output"
 	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -22,6 +24,17 @@ func NewCmd(o *options) *cobra.Command {
 	)
 
 	cmd.PersistentFlags().StringVarP(&o.configPath, "config-path", "c", config.ConfigPath, "Provides path to the config file.")
+	cmd.Flags().VarP(output.NewFlag(&o.outFormat, "table", "$g/$G/$a", "-/-/-/-"), "output", "o", `Provides format for the output information. 
+	
+For the 'text' output format you can specifie two more informations by spliting them using '='. The first one would be used as output format and second as error format.
+
+The first one can contains at least on out of four elements where:
+- '`+formater.ConfigTextAllFormat+`' represents number of all projects,
+- '`+formater.ConfigTextGCPFormat+`' represents number of GCP projects,
+- '`+formater.ConfigTextGardenerFormat+`' represents number of Gardener projects,
+- '`+formater.ConfigTextPersistentFormat+`' represents value of the persistentSpec field.
+
+The second one can contains '`+formater.ConfigTextErrorFormat+`'  which will be replaced with error message.`)
 
 	return cmd
 }
@@ -32,15 +45,10 @@ func run(o *options) error {
 		return errors.Wrap(err, "while reading config file")
 	}
 
-	b, err := o.marshal(c)
-	if err != nil {
+	// verify
+	if _, err := o.marshal(c); err != nil {
 		return errors.Wrap(err, "while verifying config structure")
 	}
 
-	_, err = o.stdout.Write(b)
-	if err != nil {
-		return errors.Wrap(err, "while printing config file")
-	}
-
-	return nil
+	return o.outFormat.Print(o.stdout, formater.NewConfig(err, c))
 }
