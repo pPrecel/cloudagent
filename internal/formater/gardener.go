@@ -9,41 +9,41 @@ import (
 )
 
 const (
-	gardenerProvider       = "Gardener"
-	createdByLabel         = `gardener.cloud/created-by`
-	TextAllFormat          = "$a"
-	TextUnknownFormat      = "$u"
-	TextHealthyFormat      = "$r"
-	TextHibernatedFormat   = "$h"
-	TextEmptyFormat        = "$e"
-	TextEmptyUnknownFormat = "$x"
-	TextErrorFormat        = "$E"
+	gardenerProvider               = "Gardener"
+	createdByLabel                 = `gardener.cloud/created-by`
+	GardenerTextAllFormat          = "$a"
+	GardenerTextUnknownFormat      = "$u"
+	GardenerTextHealthyFormat      = "$r"
+	GardenerTextHibernatedFormat   = "$h"
+	GardenerTextEmptyFormat        = "$e"
+	GardenerTextEmptyUnknownFormat = "$x"
+	GardenerTextErrorFormat        = "$E"
 )
 
 var (
-	headers = []string{"PROJECT", "NAME", "CREATED BY", "CONDITION", "PROVIDER"}
+	gardenerHeaders = []string{"PROJECT", "NAME", "CREATED BY", "CONDITION", "PROVIDER"}
 
-	preDirectives = directiveMap{
-		TextAllFormat: func(_ *cloud_agent.Shoot) bool {
+	preGardenerDirectives = gardenerDirectiveMap{
+		GardenerTextAllFormat: func(_ *cloud_agent.Shoot) bool {
 			return true
 		},
 	}
 
-	postDirectives = directiveMap{
-		TextEmptyUnknownFormat: func(s *cloud_agent.Shoot) bool {
+	postGardenerDirectives = gardenerDirectiveMap{
+		GardenerTextEmptyUnknownFormat: func(s *cloud_agent.Shoot) bool {
 			return s.Condition == cloud_agent.Condition_EMPTY ||
 				s.Condition == cloud_agent.Condition_UNKNOWN
 		},
-		TextUnknownFormat: func(s *cloud_agent.Shoot) bool {
+		GardenerTextUnknownFormat: func(s *cloud_agent.Shoot) bool {
 			return s.Condition == cloud_agent.Condition_UNKNOWN
 		},
-		TextHealthyFormat: func(s *cloud_agent.Shoot) bool {
+		GardenerTextHealthyFormat: func(s *cloud_agent.Shoot) bool {
 			return s.Condition == cloud_agent.Condition_HEALTHY
 		},
-		TextHibernatedFormat: func(s *cloud_agent.Shoot) bool {
+		GardenerTextHibernatedFormat: func(s *cloud_agent.Shoot) bool {
 			return s.Condition == cloud_agent.Condition_HIBERNATED
 		},
-		TextEmptyFormat: func(s *cloud_agent.Shoot) bool {
+		GardenerTextEmptyFormat: func(s *cloud_agent.Shoot) bool {
 			return s.Condition == cloud_agent.Condition_EMPTY
 		},
 	}
@@ -65,38 +65,38 @@ func NewGardener(err error, shoots *cloud_agent.ShootList, filters Filters) outp
 	}
 }
 
-func (s *gardenerFormater) YAML() interface{} {
-	if s.err != nil {
+func (f *gardenerFormater) YAML() interface{} {
+	if f.err != nil {
 		return map[string]interface{}{}
 	}
 
-	shoots := s.filters.filter(s.shoots)
+	shoots := f.filters.filter(f.shoots)
 
 	return map[string]interface{}{
 		"shoots": shoots.Shoots,
 	}
 }
 
-func (s *gardenerFormater) JSON() interface{} {
-	if s.err != nil {
+func (f *gardenerFormater) JSON() interface{} {
+	if f.err != nil {
 		return map[string]interface{}{}
 	}
 
-	shoots := s.filters.filter(s.shoots)
+	shoots := f.filters.filter(f.shoots)
 
 	return map[string]interface{}{
 		"shoots": shoots.Shoots,
 	}
 }
 
-func (s *gardenerFormater) Table() ([]string, [][]string) {
+func (f *gardenerFormater) Table() ([]string, [][]string) {
 	rows := [][]string{}
 
-	if s.err != nil {
-		return headers, rows
+	if f.err != nil {
+		return gardenerHeaders, rows
 	}
 
-	shoots := s.filters.filter(s.shoots)
+	shoots := f.filters.filter(f.shoots)
 
 	for i := range shoots.Shoots {
 		shoot := shoots.Shoots[i]
@@ -114,20 +114,20 @@ func (s *gardenerFormater) Table() ([]string, [][]string) {
 		})
 	}
 
-	return headers, rows
+	return gardenerHeaders, rows
 }
 
-func (s *gardenerFormater) Text(outFormat, errFormat string) string {
-	if s.err != nil {
-		return strings.ReplaceAll(errFormat, TextErrorFormat, s.err.Error())
+func (f *gardenerFormater) Text(outFormat, errFormat string) string {
+	if f.err != nil {
+		return strings.ReplaceAll(errFormat, GardenerTextErrorFormat, f.err.Error())
 	}
 
-	shoots := s.shoots
-	directives := preDirectives.run(shoots, map[string]int{})
+	shoots := f.shoots
+	directives := preGardenerDirectives.run(shoots, map[string]int{})
 
-	shoots = s.filters.filter(shoots)
+	shoots = f.filters.filter(shoots)
 
-	directives = postDirectives.run(shoots, directives)
+	directives = postGardenerDirectives.run(shoots, directives)
 
 	str := outFormat
 	for key, val := range directives {
@@ -137,9 +137,9 @@ func (s *gardenerFormater) Text(outFormat, errFormat string) string {
 	return str
 }
 
-type directiveMap map[string]func(*cloud_agent.Shoot) bool
+type gardenerDirectiveMap map[string]func(*cloud_agent.Shoot) bool
 
-func (d directiveMap) run(s *cloud_agent.ShootList, m map[string]int) map[string]int {
+func (d gardenerDirectiveMap) run(s *cloud_agent.ShootList, m map[string]int) map[string]int {
 	for key, val := range d {
 		m[key] = 0
 

@@ -27,7 +27,7 @@ type watcher struct {
 
 func NewWatcher() *watcher {
 	return &watcher{
-		getConfig:        config.GetConfig,
+		getConfig:        config.Read,
 		newClusterConfig: gardener.NewClusterConfig,
 		notifyChange:     system.NotifyChange,
 	}

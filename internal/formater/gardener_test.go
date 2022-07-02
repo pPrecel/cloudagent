@@ -182,7 +182,7 @@ func Test_state_Table(t *testing.T) {
 			fields: fields{
 				shoots: testShoots,
 			},
-			want:  headers,
+			want:  gardenerHeaders,
 			want1: testRows,
 		},
 		{
@@ -190,7 +190,7 @@ func Test_state_Table(t *testing.T) {
 			fields: fields{
 				err: errors.New("test"),
 			},
-			want:  headers,
+			want:  gardenerHeaders,
 			want1: [][]string{},
 		},
 		{
@@ -201,7 +201,7 @@ func Test_state_Table(t *testing.T) {
 					CreatedBy: "me",
 				},
 			},
-			want:  headers,
+			want:  gardenerHeaders,
 			want1: testFilteredRows,
 		},
 	}

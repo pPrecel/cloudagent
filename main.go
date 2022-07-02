@@ -34,15 +34,12 @@ func main() {
 	cmd.AddCommand(&cobra.Command{Use: "completion", Hidden: true})
 
 	cmd.AddCommand(
-		config.NewCmd(o),
+		config.NewCmd(config.NewOptions(o)),
 		serve.NewCmd(serve.NewOptions(o)),
 		state.NewCmd(state.NewOptions(o)),
 	)
 
-	err := cmd.Execute()
-	if err != nil {
-		o.Logger.Fatal(err)
-	}
+	_ = cmd.Execute()
 }
 
 func newLogger() *logrus.Logger {
