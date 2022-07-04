@@ -1,11 +1,16 @@
 CLOUDAGENT_PATH ?= /usr/local/bin/cloudagent-dev
 PLIST_LABEL ?= com.pPrecel.cloudagent.agent.plist
 PLIST_PATH ?= ~/Library/LaunchAgents/com.pPrecel.cloudagent.agent.plist
+GIT_BRANCH ?= $(shell git branch --show-current)
 CURRENT_DIR = $(shell pwd)
 
 .PHONY: build
 build:
-	go build -o .out/cloudagent main.go
+	go build  -o .out/cloudagent main.go
+
+.PHONY: build-ci
+build-ci:
+	go build -ldflags="-X 'main.Version=$(GIT_BRANCH)'" -o .out/cloudagent main.go
 
 .PHONY: rm-from-path
 rm-from-path:
