@@ -10,8 +10,9 @@ import (
 func NewCmd(o *command.Options) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "version",
-		Run: func(_ *cobra.Command, _ []string) {
-			fmt.Printf(o.Version)
+		RunE: func(_ *cobra.Command, _ []string) error {
+			_, err := fmt.Printf(o.Version)
+			return err
 		},
 	}
 
