@@ -68,7 +68,7 @@ func (w *watcher) newWatcher(o *Options) (*agent.Watcher, error) {
 		p := config.GardenerProjects[i]
 		r := o.Cache.Register(p.Namespace)
 
-		o.Logger.Debugf("creeating watcher func for namespace: '%s'", p.Namespace)
+		o.Logger.Debugf("creating watcher func for namespace: '%s'", p.Namespace)
 		l := o.Logger.WithFields(
 			logrus.Fields{
 				"provider": "gardener",

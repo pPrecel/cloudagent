@@ -22,6 +22,9 @@ func NewCmd(o *options) *cobra.Command {
 			return o.validate()
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
+			// change logger options
+			o.Logger.Formatter = &logrus.JSONFormatter{}
+
 			return run(o)
 		},
 	}
@@ -33,9 +36,6 @@ func NewCmd(o *options) *cobra.Command {
 
 func run(o *options) error {
 	o.Logger.Info("starting gardeners agent")
-
-	// change logger options
-	o.Logger.Formatter = &logrus.JSONFormatter{}
 
 	gardenerCache := agent.NewCache[*v1beta1_apis.ShootList]()
 	go func() {
