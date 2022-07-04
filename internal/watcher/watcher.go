@@ -13,7 +13,7 @@ import (
 
 type Options struct {
 	Context    context.Context
-	Logger     *logrus.Logger
+	Logger     *logrus.Entry
 	Cache      agent.Cache[*v1beta1_apis.ShootList]
 	ConfigPath string
 }
@@ -69,8 +69,14 @@ func (w *watcher) newWatcher(o *Options) (*agent.Watcher, error) {
 		r := o.Cache.Register(p.Namespace)
 
 		o.Logger.Debugf("creeating watcher func for namespace: '%s'", p.Namespace)
+		l := o.Logger.WithFields(
+			logrus.Fields{
+				"provider": "gardener",
+				"project":  p.Namespace,
+			},
+		)
 		funcs = append(funcs,
-			gardener.NewWatchFunc(o.Logger, r, p.Namespace, p.KubeconfigPath),
+			gardener.NewWatchFunc(l, r, p.Namespace, p.KubeconfigPath),
 		)
 	}
 

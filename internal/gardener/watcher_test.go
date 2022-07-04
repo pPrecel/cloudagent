@@ -43,8 +43,10 @@ var (
 )
 
 func Test_newWatchFunc(t *testing.T) {
-	l := logrus.New()
-	l.Out = ioutil.Discard
+	l := &logrus.Entry{
+		Logger: logrus.New(),
+	}
+	l.Logger.Out = ioutil.Discard
 
 	t.Run("Fn not nil", func(t *testing.T) {
 		c := NewWatchFunc(l, nil, "", "")
@@ -52,7 +54,6 @@ func Test_newWatchFunc(t *testing.T) {
 	})
 
 	type args struct {
-		l             *logrus.Logger
 		r             agent.RegisteredResource[*v1beta1.ShootList]
 		clientBuilder func() (Client, error)
 	}
@@ -64,7 +65,6 @@ func Test_newWatchFunc(t *testing.T) {
 		{
 			name: "list resources",
 			args: args{
-				l: l,
 				r: agent.NewCache[*v1beta1.ShootList]().Register("test"),
 				clientBuilder: func() (Client, error) {
 					c := automock.NewClient(t)
@@ -78,7 +78,6 @@ func Test_newWatchFunc(t *testing.T) {
 		{
 			name: "list error",
 			args: args{
-				l: l,
 				r: agent.NewCache[*v1beta1.ShootList]().Register("test"),
 				clientBuilder: func() (Client, error) {
 					c := automock.NewClient(t)
@@ -92,7 +91,6 @@ func Test_newWatchFunc(t *testing.T) {
 		{
 			name: "client built error",
 			args: args{
-				l: l,
 				r: agent.NewCache[*v1beta1.ShootList]().Register("test"),
 				clientBuilder: func() (Client, error) {
 					return nil, errors.New("test error")
@@ -103,7 +101,6 @@ func Test_newWatchFunc(t *testing.T) {
 		{
 			name: "first client built error",
 			args: args{
-				l: l,
 				r: agent.NewCache[*v1beta1.ShootList]().Register("test"),
 				clientBuilder: func() func() (Client, error) {
 					// return error on first run only
@@ -126,7 +123,7 @@ func Test_newWatchFunc(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			newWatchFunc(tt.args.l, tt.args.r, tt.args.clientBuilder)(context.Background())
+			newWatchFunc(l, tt.args.r, tt.args.clientBuilder)(context.Background())
 
 			got := tt.args.r.Get()
 			if !reflect.DeepEqual(got, tt.want) {
@@ -137,8 +134,10 @@ func Test_newWatchFunc(t *testing.T) {
 }
 
 func Test_newClientBuilder(t *testing.T) {
-	l := logrus.New()
-	l.Out = ioutil.Discard
+	l := &logrus.Entry{
+		Logger: logrus.New(),
+	}
+	l.Logger.Out = ioutil.Discard
 
 	type args struct {
 		buildConfig func(string) (*rest.Config, error)

@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"io"
 	"testing"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
@@ -145,9 +146,14 @@ var (
 )
 
 func Test_server_GardenerShoots(t *testing.T) {
+	l := &logrus.Entry{
+		Logger: logrus.New(),
+	}
+	l.Logger.Out = io.Discard
+
 	type fields struct {
 		gardenerCache Cache[*v1beta1.ShootList]
-		logger        *logrus.Logger
+		logger        *logrus.Entry
 	}
 	tests := []struct {
 		name    string
@@ -159,7 +165,7 @@ func Test_server_GardenerShoots(t *testing.T) {
 			name: "empty state list",
 			fields: fields{
 				gardenerCache: fixShootListCache(&v1beta1.ShootList{}),
-				logger:        logrus.New(),
+				logger:        l,
 			},
 			want:    &cloud_agent.ShootList{},
 			wantErr: false,
@@ -168,7 +174,7 @@ func Test_server_GardenerShoots(t *testing.T) {
 			name: "state list",
 			fields: fields{
 				gardenerCache: fixShootListCache(testGardenerShootList),
-				logger:        logrus.New(),
+				logger:        l,
 			},
 			want:    testAgentShootList,
 			wantErr: false,
@@ -177,7 +183,7 @@ func Test_server_GardenerShoots(t *testing.T) {
 			name: "nil state list",
 			fields: fields{
 				gardenerCache: fixShootListCache(nil),
-				logger:        logrus.New(),
+				logger:        l,
 			},
 			want:    &cloud_agent.ShootList{},
 			wantErr: false,
@@ -186,7 +192,7 @@ func Test_server_GardenerShoots(t *testing.T) {
 			name: "nil cache",
 			fields: fields{
 				gardenerCache: nil,
-				logger:        logrus.New(),
+				logger:        l,
 			},
 			want:    nil,
 			wantErr: true,
@@ -195,7 +201,7 @@ func Test_server_GardenerShoots(t *testing.T) {
 			name: "multiple cache keys",
 			fields: fields{
 				gardenerCache: fixShootListCache2(),
-				logger:        logrus.New(),
+				logger:        l,
 			},
 			want: &cloud_agent.ShootList{
 				Shoots: append(testAgentShootList2.Shoots, testAgentShootList.Shoots...),

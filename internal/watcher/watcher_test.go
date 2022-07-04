@@ -35,8 +35,10 @@ func TestNewWatcher(t *testing.T) {
 }
 
 func Test_watcher_Start(t *testing.T) {
-	l := logrus.New()
-	l.Out = io.Discard
+	l := &logrus.Entry{
+		Logger: logrus.New(),
+	}
+	l.Logger.Out = io.Discard
 
 	type fields struct {
 		getConfig    func(string) (*config.Config, error)

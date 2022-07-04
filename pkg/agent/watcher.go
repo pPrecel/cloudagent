@@ -12,7 +12,7 @@ type WatchFn func(context.Context)
 type WatcherOptions struct {
 	Spec    string
 	Context context.Context
-	Logger  *logrus.Logger
+	Logger  *logrus.Entry
 }
 
 type Watcher struct {

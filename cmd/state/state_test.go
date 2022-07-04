@@ -60,8 +60,10 @@ var (
 )
 
 func Test_run(t *testing.T) {
-	l := logrus.New()
-	l.Out = ioutil.Discard
+	l := &logrus.Entry{
+		Logger: logrus.New(),
+	}
+	l.Logger.Out = ioutil.Discard
 
 	t.Run("run and print text", func(t *testing.T) {
 		c := agent.NewCache[*v1beta1.ShootList]()
@@ -75,7 +77,7 @@ func Test_run(t *testing.T) {
 			socketNetwork: socketNetwork,
 			writer:        io.Discard,
 			Options: &command.Options{
-				Logger:  l,
+				Logger:  l.Logger,
 				Context: context.Background(),
 			},
 		}
@@ -102,7 +104,7 @@ func Test_run(t *testing.T) {
 			socketNetwork: socketNetwork,
 			writer:        io.Discard,
 			Options: &command.Options{
-				Logger:  l,
+				Logger:  l.Logger,
 				Context: context.Background(),
 			},
 		}
@@ -128,7 +130,7 @@ func Test_run(t *testing.T) {
 			socketAddress: "\n",
 			writer:        io.Discard,
 			Options: &command.Options{
-				Logger:  l,
+				Logger:  l.Logger,
 				Context: context.Background(),
 			},
 		}
@@ -147,7 +149,7 @@ func Test_run(t *testing.T) {
 	})
 }
 
-func fixServer(l *logrus.Logger, c agent.Cache[*v1beta1.ShootList]) (stop func(), err error) {
+func fixServer(l *logrus.Entry, c agent.Cache[*v1beta1.ShootList]) (stop func(), err error) {
 	lis, err := agent.NewSocket(socketNetwork, socketAddress)
 	if err != nil {
 		return nil, err

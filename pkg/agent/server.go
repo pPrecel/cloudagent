@@ -13,13 +13,13 @@ var _ cloud_agent.AgentServer = &server{}
 
 type ServerOption struct {
 	GardenerCache Cache[*v1beta1.ShootList]
-	Logger        *logrus.Logger
+	Logger        *logrus.Entry
 }
 
 type server struct {
 	cloud_agent.UnimplementedAgentServer
 	gardenerCache Cache[*v1beta1.ShootList]
-	logger        *logrus.Logger
+	logger        *logrus.Entry
 }
 
 func NewServer(opts *ServerOption) cloud_agent.AgentServer {

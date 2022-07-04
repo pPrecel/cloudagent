@@ -15,11 +15,11 @@ type Client interface {
 	List(context.Context, v1.ListOptions) (*v1beta1.ShootList, error)
 }
 
-func NewWatchFunc(l *logrus.Logger, r agent.RegisteredResource[*v1beta1.ShootList], namespace, kubeconfig string) agent.WatchFn {
+func NewWatchFunc(l *logrus.Entry, r agent.RegisteredResource[*v1beta1.ShootList], namespace, kubeconfig string) agent.WatchFn {
 	return newWatchFunc(l, r, newClientBuilder(l, newClusterConfig, namespace, kubeconfig))
 }
 
-func newWatchFunc(l *logrus.Logger, r agent.RegisteredResource[*v1beta1.ShootList], clientBuilder func() (Client, error)) agent.WatchFn {
+func newWatchFunc(l *logrus.Entry, r agent.RegisteredResource[*v1beta1.ShootList], clientBuilder func() (Client, error)) agent.WatchFn {
 	l.Debug("setting up watchers func")
 	var c Client
 	var err error
@@ -49,7 +49,7 @@ func newWatchFunc(l *logrus.Logger, r agent.RegisteredResource[*v1beta1.ShootLis
 	}
 }
 
-func newClientBuilder(l *logrus.Logger, buildConfig func(string) (*rest.Config, error), namespace, kubeconfig string) func() (Client, error) {
+func newClientBuilder(l *logrus.Entry, buildConfig func(string) (*rest.Config, error), namespace, kubeconfig string) func() (Client, error) {
 	return func() (Client, error) {
 		l.Debugf("creating cluster config for kubeconfig: %s", kubeconfig)
 		cfg, err := buildConfig(kubeconfig)
