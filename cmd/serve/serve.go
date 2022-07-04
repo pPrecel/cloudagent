@@ -1,6 +1,8 @@
 package serve
 
 import (
+	"time"
+
 	v1beta1_apis "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloudagent/internal/watcher"
 	"github.com/pPrecel/cloudagent/pkg/agent"
@@ -35,6 +37,9 @@ func run(o *options) error {
 	go func() {
 		for {
 			startWatcher(o, gardenerCache)
+
+			// wait 1sec to avoid CPU throttling
+			time.Sleep(time.Second * 1)
 		}
 	}()
 

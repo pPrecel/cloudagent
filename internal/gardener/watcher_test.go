@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
+	"reflect"
 	"testing"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
@@ -13,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
 )
 
 var (
@@ -40,12 +42,19 @@ var (
 	}
 )
 
-func TestNewWatchFunc(t *testing.T) {
+func Test_newWatchFunc(t *testing.T) {
 	l := logrus.New()
 	l.Out = ioutil.Discard
 
+	t.Run("Fn not nil", func(t *testing.T) {
+		c := NewWatchFunc(l, nil, "", "")
+		assert.NotNil(t, c)
+	})
+
 	type args struct {
-		c Client
+		l             *logrus.Logger
+		r             agent.RegisteredResource[*v1beta1.ShootList]
+		clientBuilder func() (Client, error)
 	}
 	tests := []struct {
 		name string
@@ -53,38 +62,142 @@ func TestNewWatchFunc(t *testing.T) {
 		want *v1beta1.ShootList
 	}{
 		{
-			name: "watch resources",
+			name: "list resources",
 			args: args{
-				c: func() Client {
+				l: l,
+				r: agent.NewCache[*v1beta1.ShootList]().Register("test"),
+				clientBuilder: func() (Client, error) {
 					c := automock.NewClient(t)
 					c.On("List", mock.Anything, v1.ListOptions{}).Return(shootList, nil).Once()
 
-					return c
-				}(),
+					return c, nil
+				},
 			},
 			want: shootList,
 		},
 		{
 			name: "list error",
 			args: args{
-				c: func() Client {
+				l: l,
+				r: agent.NewCache[*v1beta1.ShootList]().Register("test"),
+				clientBuilder: func() (Client, error) {
 					c := automock.NewClient(t)
-					c.On("List", mock.Anything, v1.ListOptions{}).Return(nil, errors.New("new error")).Once()
+					c.On("List", mock.Anything, v1.ListOptions{}).Return(nil, errors.New("test error")).Once()
 
-					return c
-				}(),
+					return c, nil
+				},
 			},
 			want: nil,
+		},
+		{
+			name: "client built error",
+			args: args{
+				l: l,
+				r: agent.NewCache[*v1beta1.ShootList]().Register("test"),
+				clientBuilder: func() (Client, error) {
+					return nil, errors.New("test error")
+				},
+			},
+			want: nil,
+		},
+		{
+			name: "first client built error",
+			args: args{
+				l: l,
+				r: agent.NewCache[*v1beta1.ShootList]().Register("test"),
+				clientBuilder: func() func() (Client, error) {
+					// return error on first run only
+					i := 0
+					return func() (Client, error) {
+						if i == 0 {
+							i++
+							return nil, errors.New("test error")
+						}
+
+						c := automock.NewClient(t)
+						c.On("List", mock.Anything, v1.ListOptions{}).Return(shootList, nil).Once()
+
+						return c, nil
+					}
+				}(),
+			},
+			want: shootList,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := agent.NewCache[*v1beta1.ShootList]()
-			r := c.Register("test-data")
-			got := NewWatchFunc(l, tt.args.c, r)
+			newWatchFunc(tt.args.l, tt.args.r, tt.args.clientBuilder)(context.Background())
 
-			got(context.Background())
-			assert.Equal(t, tt.want, r.Get())
+			got := tt.args.r.Get()
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("newWatchFunc() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_newClientBuilder(t *testing.T) {
+	l := logrus.New()
+	l.Out = ioutil.Discard
+
+	type args struct {
+		buildConfig func(string) (*rest.Config, error)
+		namespace   string
+		kubeconfig  string
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantClient bool
+		wantErr    bool
+	}{
+		{
+			name: "return client",
+			args: args{
+				buildConfig: newClusterConfig,
+				namespace:   "namespace1",
+				kubeconfig:  fixKubeconfigPath(t),
+			},
+			wantClient: true,
+			wantErr:    false,
+		},
+		{
+			name: "cluster config error",
+			args: args{
+				buildConfig: newClusterConfig,
+				namespace:   "namespace1",
+				kubeconfig:  fixEmptyKubeconfigPath(t),
+			},
+			wantClient: false,
+			wantErr:    true,
+		},
+		{
+			name: "cluster client error",
+			args: args{
+				buildConfig: func(s string) (*rest.Config, error) {
+					c, err := fixWrongRestClient()
+					assert.NoError(t, err)
+					return c, nil
+				},
+				namespace:  "namespace1",
+				kubeconfig: fixKubeconfigPath(t),
+			},
+			wantClient: false,
+			wantErr:    true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			newClient := newClientBuilder(l, tt.args.buildConfig, tt.args.namespace, tt.args.kubeconfig)
+			got, err := newClient()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewClient() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if (got != nil) != tt.wantClient {
+				t.Errorf("NewClient() client = %v, wantClient %v", err, tt.wantErr)
+				return
+			}
 		})
 	}
 }

@@ -9,7 +9,6 @@ import (
 	"github.com/pPrecel/cloudagent/pkg/agent"
 	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/sirupsen/logrus"
-	"k8s.io/client-go/rest"
 )
 
 type Options struct {
@@ -20,16 +19,14 @@ type Options struct {
 }
 
 type watcher struct {
-	getConfig        func(string) (*config.Config, error)
-	newClusterConfig func(string) (*rest.Config, error)
-	notifyChange     func(string) (*system.Notifier, error)
+	getConfig    func(string) (*config.Config, error)
+	notifyChange func(string) (*system.Notifier, error)
 }
 
 func NewWatcher() *watcher {
 	return &watcher{
-		getConfig:        config.Read,
-		newClusterConfig: gardener.NewClusterConfig,
-		notifyChange:     system.NotifyChange,
+		getConfig:    config.Read,
+		notifyChange: system.NotifyChange,
 	}
 }
 
@@ -69,24 +66,11 @@ func (w *watcher) newWatcher(o *Options) (*agent.Watcher, error) {
 	funcs := []agent.WatchFn{}
 	for i := range config.GardenerProjects {
 		p := config.GardenerProjects[i]
-
-		o.Logger.Debugf("creating cluster config for kubeconfig: %s", p.KubeconfigPath)
-		cfg, err := w.newClusterConfig(p.KubeconfigPath)
-		if err != nil {
-			return nil, err
-		}
-
-		o.Logger.Debug("creating gardener client")
-		c, err := gardener.NewClient(cfg)
-		if err != nil {
-			return nil, err
-		}
-
 		r := o.Cache.Register(p.Namespace)
 
 		o.Logger.Debugf("creeating watcher func for namespace: '%s'", p.Namespace)
 		funcs = append(funcs,
-			gardener.NewWatchFunc(o.Logger, c.Shoots(p.Namespace), r),
+			gardener.NewWatchFunc(o.Logger, r, p.Namespace, p.KubeconfigPath),
 		)
 	}
 
