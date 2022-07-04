@@ -1,11 +1,14 @@
 package serve
 
 import (
+	"time"
+
 	v1beta1_apis "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloudagent/internal/watcher"
 	"github.com/pPrecel/cloudagent/pkg/agent"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
 	"github.com/pPrecel/cloudagent/pkg/config"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	googlerpc "google.golang.org/grpc"
 )
@@ -19,6 +22,9 @@ func NewCmd(o *options) *cobra.Command {
 			return o.validate()
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
+			// change logger options
+			o.Logger.Formatter = &logrus.JSONFormatter{}
+
 			return run(o)
 		},
 	}
@@ -35,6 +41,9 @@ func run(o *options) error {
 	go func() {
 		for {
 			startWatcher(o, gardenerCache)
+
+			// wait 1sec to avoid CPU throttling
+			time.Sleep(time.Second * 1)
 		}
 	}()
 
@@ -47,7 +56,7 @@ func run(o *options) error {
 	grpcServer := googlerpc.NewServer(googlerpc.EmptyServerOption{})
 	agentServer := agent.NewServer(&agent.ServerOption{
 		GardenerCache: gardenerCache,
-		Logger:        o.Logger,
+		Logger:        o.Logger.WithField("component", "server"),
 	})
 	cloud_agent.RegisterAgentServer(grpcServer, agentServer)
 
@@ -58,7 +67,7 @@ func run(o *options) error {
 func startWatcher(o *options, cache agent.Cache[*v1beta1_apis.ShootList]) {
 	if err := watcher.NewWatcher().Start(&watcher.Options{
 		Context:    o.Context,
-		Logger:     o.Logger,
+		Logger:     o.Logger.WithField("component", "watcher"),
 		Cache:      cache,
 		ConfigPath: o.configPath,
 	}); err != nil {

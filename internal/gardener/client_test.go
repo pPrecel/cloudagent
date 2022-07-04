@@ -20,13 +20,8 @@ func TestNewClusterConfig(t *testing.T) {
 		wantErr        bool
 	}{
 		{
-			name: "create config",
-			kubeconfigPath: func() string {
-				_, filename, _, ok := runtime.Caller(0)
-				assert.True(t, ok)
-
-				return filepath.Join(filepath.Dir(filename), "/testdata/kubeconfig.yml")
-			}(),
+			name:           "create config",
+			kubeconfigPath: fixKubeconfigPath(t),
 			want: &rest.Config{
 				Host: "http://localhost:8080",
 			},
@@ -39,20 +34,15 @@ func TestNewClusterConfig(t *testing.T) {
 			wantErr:        true,
 		},
 		{
-			name: "empty kubeconfig",
-			kubeconfigPath: func() string {
-				_, filename, _, ok := runtime.Caller(0)
-				assert.True(t, ok)
-
-				return filepath.Join(filepath.Dir(filename), "/testdata/empty_kubeconfig.yml")
-			}(),
-			want:    nil,
-			wantErr: true,
+			name:           "empty kubeconfig",
+			kubeconfigPath: fixEmptyKubeconfigPath(t),
+			want:           nil,
+			wantErr:        true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewClusterConfig(tt.kubeconfigPath)
+			got, err := newClusterConfig(tt.kubeconfigPath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewClusterConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -69,7 +59,7 @@ func TestNewClient(t *testing.T) {
 		actualCfg, err := fixRestClient()
 		assert.NoError(t, err)
 
-		c, err := NewClient(actualCfg)
+		c, err := newClient(actualCfg)
 		assert.NoError(t, err)
 		assert.NotNil(t, c)
 	})
@@ -78,10 +68,24 @@ func TestNewClient(t *testing.T) {
 		actualCfg, err := fixWrongRestClient()
 		assert.NoError(t, err)
 
-		c, err := NewClient(actualCfg)
+		c, err := newClient(actualCfg)
 		assert.Error(t, err)
 		assert.Nil(t, c)
 	})
+}
+
+func fixKubeconfigPath(t *testing.T) string {
+	_, filename, _, ok := runtime.Caller(0)
+	assert.True(t, ok)
+
+	return filepath.Join(filepath.Dir(filename), "/testdata/kubeconfig.yml")
+}
+
+func fixEmptyKubeconfigPath(t *testing.T) string {
+	_, filename, _, ok := runtime.Caller(0)
+	assert.True(t, ok)
+
+	return filepath.Join(filepath.Dir(filename), "/testdata/empty_kubeconfig.yml")
 }
 
 func fixWrongRestClient() (*rest.Config, error) {

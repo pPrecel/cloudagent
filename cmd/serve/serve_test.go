@@ -47,10 +47,9 @@ var (
 )
 
 func Test_run(t *testing.T) {
-	l := logrus.New()
-	l.Out = io.Discard
-
 	t.Run("validate and run", func(t *testing.T) {
+		l := logrus.New()
+		l.Out = io.Discard
 		o := &options{
 			Options: &command.Options{
 				Logger:  l,
@@ -84,6 +83,8 @@ func Test_run(t *testing.T) {
 	})
 
 	t.Run("socket error", func(t *testing.T) {
+		l := logrus.New()
+		l.Out = io.Discard
 		o := &options{
 			Options: &command.Options{
 				Logger:  l,

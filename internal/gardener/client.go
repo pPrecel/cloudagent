@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func NewClusterConfig(kubeconfigPath string) (*rest.Config, error) {
+func newClusterConfig(kubeconfigPath string) (*rest.Config, error) {
 	rawKubeconfig, err := ioutil.ReadFile(kubeconfigPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read Gardener Kubeconfig from path %s: %s",
@@ -23,7 +23,7 @@ func NewClusterConfig(kubeconfigPath string) (*rest.Config, error) {
 	return gardenerClusterConfig, nil
 }
 
-func NewClient(config *rest.Config) (*v1beta1.CoreV1beta1Client, error) {
+func newClient(config *rest.Config) (*v1beta1.CoreV1beta1Client, error) {
 	clientset, err := v1beta1.NewForConfig(config)
 	if err != nil {
 		return nil, fmt.Errorf("failer to create gardener client: %s", err.Error())
