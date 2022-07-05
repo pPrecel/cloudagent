@@ -54,8 +54,6 @@ brews:
       system "#{bin}/cloudagent"
     install: |
       bin.install "cloudagent"
-    post_install: |
-      system "make", "bootstrap-config"
     service: |
       run ["#{opt_bin}/cloudagent", "serve"]
       log_path "/tmp/cloudagent/cloudagent.stdout"
