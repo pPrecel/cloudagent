@@ -1,11 +1,9 @@
 CLOUDAGENT_PATH ?= /usr/local/bin/cloudagent-dev
-PLIST_LABEL ?= com.pPrecel.cloudagent.agent.plist
-PLIST_PATH ?= ~/Library/LaunchAgents/com.pPrecel.cloudagent.agent.plist
 CURRENT_DIR = $(shell pwd)
 
 .PHONY: build
 build:
-	go build -o .out/cloudagent main.go
+	./hack/build.sh
 
 .PHONY: rm-from-path
 rm-from-path:
@@ -17,7 +15,7 @@ ln-to-path:
 
 .PHONY: bootstrap-config
 bootstrap-config:
-	@./hack/config_template.sh
+	./hack/config_template.sh
 
 .PHONY: protobuf
 protobuf:
@@ -27,11 +25,11 @@ protobuf:
 
 .PHONY: verify
 verify:
-	@./hack/verify.sh
+	./hack/verify.sh
 
 .PHONY: verify-proto
 verify-proto:
-	@./hack/verify-proto.sh
+	./hack/verify-proto.sh
 
 .PHONY: verify-ci
 verify-ci: verify verify-proto

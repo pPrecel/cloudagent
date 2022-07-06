@@ -9,5 +9,6 @@ import (
 type Options struct {
 	Context context.Context
 	Logger  *logrus.Logger
+	Version string
 	Verbose bool
 }
