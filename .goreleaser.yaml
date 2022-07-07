@@ -57,7 +57,7 @@ brews:
     service: |
       run ["#{opt_bin}/cloudagent", "serve"]
       log_path "/tmp/cloudagent/cloudagent.stdout"
-      environment_variables PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:#{Dir.home}/.rd/bin:#{Dir.home}/.krew/bin"
+      environment_variables PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:#{Dir.home}/.rd/bin:#{Dir.home}/.krew/bin:"
       keep_alive true
 
 checksum:
