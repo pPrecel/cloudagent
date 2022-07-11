@@ -2,6 +2,7 @@ package state
 
 import (
 	"context"
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
@@ -66,8 +67,10 @@ func Test_run(t *testing.T) {
 	l.Logger.Out = ioutil.Discard
 
 	t.Run("run and print text", func(t *testing.T) {
-		c := agent.NewCache[*v1beta1.ShootList]()
-		r := c.Register("test-data")
+		c := &agent.ServerCache{
+			GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+		}
+		r := c.GardenerCache.Register("test-data")
 		stopFn, err := fixServer(l, c)
 		assert.NoError(t, err)
 		defer stopFn()
@@ -89,7 +92,7 @@ func Test_run(t *testing.T) {
 			Items: []v1beta1.Shoot{
 				{}, {}, {},
 			},
-		})
+		}, nil)
 
 		err = cmd.RunE(cmd, []string{})
 		assert.NoError(t, err)
@@ -116,10 +119,10 @@ func Test_run(t *testing.T) {
 			Items: []v1beta1.Shoot{
 				{}, {}, {},
 			},
-		})
+		}, nil)
 
 		err := cmd.RunE(cmd, []string{})
-		assert.NoError(t, err)
+		assert.Error(t, err)
 	})
 
 	t.Run("dial error", func(t *testing.T) {
@@ -142,14 +145,70 @@ func Test_run(t *testing.T) {
 			Items: []v1beta1.Shoot{
 				{}, {}, {},
 			},
-		})
+		}, nil)
 
 		err := cmd.RunE(cmd, []string{})
+		assert.Error(t, err)
+	})
+	t.Run("request error", func(t *testing.T) {
+		c := &agent.ServerCache{
+			GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+		}
+		r := c.GardenerCache.Register("test-data")
+		stopFn, err := fixServer(l, c)
+		assert.NoError(t, err)
+		defer stopFn()
+
+		o := &options{
+			socketAddress: socketAddress,
+			socketNetwork: socketNetwork,
+			writer:        io.Discard,
+			Options: &command.Options{
+				Logger:  l.Logger,
+				Context: context.Background(),
+			},
+		}
+		cmd := NewCmd(o)
+		o.createdBy = "owner"
+		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$r/$h/$u/$a", "-/-/-/-")
+
+		r.Set(&v1beta1.ShootList{
+			Items: []v1beta1.Shoot{
+				{}, {}, {},
+			},
+		}, errors.New("test error"))
+
+		err = cmd.RunE(cmd, []string{})
+		assert.NoError(t, err)
+	})
+	t.Run("request general error", func(t *testing.T) {
+		c := &agent.ServerCache{
+			GeneralError:  errors.New("test error"),
+			GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+		}
+		stopFn, err := fixServer(l, c)
+		assert.NoError(t, err)
+		defer stopFn()
+
+		o := &options{
+			socketAddress: socketAddress,
+			socketNetwork: socketNetwork,
+			writer:        io.Discard,
+			Options: &command.Options{
+				Logger:  l.Logger,
+				Context: context.Background(),
+			},
+		}
+		cmd := NewCmd(o)
+		o.createdBy = "owner"
+		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$r/$h/$u/$a", "-/-/-/-")
+
+		err = cmd.RunE(cmd, []string{})
 		assert.NoError(t, err)
 	})
 }
 
-func fixServer(l *logrus.Entry, c agent.Cache[*v1beta1.ShootList]) (stop func(), err error) {
+func fixServer(l *logrus.Entry, c *agent.ServerCache) (stop func(), err error) {
 	lis, err := agent.NewSocket(socketNetwork, socketAddress)
 	if err != nil {
 		return nil, err
@@ -157,8 +216,8 @@ func fixServer(l *logrus.Entry, c agent.Cache[*v1beta1.ShootList]) (stop func(),
 
 	grpcServer := googlerpc.NewServer(googlerpc.EmptyServerOption{})
 	agentServer := agent.NewServer(&agent.ServerOption{
-		GardenerCache: c,
-		Logger:        l,
+		Cache:  c,
+		Logger: l,
 	})
 	cloud_agent.RegisterAgentServer(grpcServer, agentServer)
 

@@ -1,8 +1,9 @@
 syntax = "proto3";
 option go_package = "github.com/pPrecel/cluster-agent;cluster_agent";
+import "google/protobuf/timestamp.proto";
 
 service Agent {
-    rpc GardenerShoots(Empty) returns (ShootList) {}
+    rpc GardenerShoots(Empty) returns (GardenerResponse) {}
     rpc GCPClusters(Empty) returns (ClusterList) {}
 }
 
@@ -10,8 +11,15 @@ message Empty {}
 
 message ClusterList {}
 
+message GardenerResponse {
+    map<string,ShootList> shootList = 1;
+    string generalError = 2;
+}
+
 message ShootList {
     repeated Shoot shoots = 1;
+    string error = 2;
+    google.protobuf.Timestamp time = 3;
 }
 
 message Shoot {

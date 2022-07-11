@@ -37,10 +37,13 @@ func NewCmd(o *options) *cobra.Command {
 func run(o *options) error {
 	o.Logger.Info("starting gardeners agent")
 
-	gardenerCache := agent.NewCache[*v1beta1_apis.ShootList]()
+	cache := &agent.ServerCache{
+		GardenerCache: agent.NewCache[*v1beta1_apis.ShootList](),
+	}
 	go func() {
 		for {
-			startWatcher(o, gardenerCache)
+			cache.GeneralError = nil
+			startWatcher(o, cache)
 
 			// wait 1sec to avoid CPU throttling
 			time.Sleep(time.Second * 1)
@@ -55,8 +58,8 @@ func run(o *options) error {
 
 	grpcServer := googlerpc.NewServer(googlerpc.EmptyServerOption{})
 	agentServer := agent.NewServer(&agent.ServerOption{
-		GardenerCache: gardenerCache,
-		Logger:        o.Logger.WithField("component", "server"),
+		Cache:  cache,
+		Logger: o.Logger.WithField("component", "server"),
 	})
 	cloud_agent.RegisterAgentServer(grpcServer, agentServer)
 
@@ -64,7 +67,7 @@ func run(o *options) error {
 	return grpcServer.Serve(lis)
 }
 
-func startWatcher(o *options, cache agent.Cache[*v1beta1_apis.ShootList]) {
+func startWatcher(o *options, cache *agent.ServerCache) {
 	if err := watcher.NewWatcher().Start(&watcher.Options{
 		Context:    o.Context,
 		Logger:     o.Logger.WithField("component", "watcher"),
@@ -72,10 +75,11 @@ func startWatcher(o *options, cache agent.Cache[*v1beta1_apis.ShootList]) {
 		ConfigPath: o.configPath,
 	}); err != nil {
 		o.Logger.Warn(err)
+		cache.GeneralError = err
 	}
 
 	o.Logger.Info("configuration midyfication detected")
 
 	o.Logger.Info("cleaning up cache")
-	cache.Clean()
+	cache.GardenerCache.Clean()
 }

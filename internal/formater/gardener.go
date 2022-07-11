@@ -52,25 +52,20 @@ var (
 var _ output.Formater = &gardenerFormater{}
 
 type gardenerFormater struct {
-	err     error
 	filters Filters
-	shoots  *cloud_agent.ShootList
+	shoots  map[string]*cloud_agent.ShootList
 }
 
-func NewGardener(err error, shoots *cloud_agent.ShootList, filters Filters) output.Formater {
+func NewGardener(shoots map[string]*cloud_agent.ShootList, filters Filters) output.Formater {
 	return &gardenerFormater{
-		err:     err,
 		shoots:  shoots,
 		filters: filters,
 	}
 }
 
 func (f *gardenerFormater) YAML() interface{} {
-	if f.err != nil {
-		return map[string]interface{}{}
-	}
-
-	shoots := f.filters.filter(f.shoots)
+	shootList := mergeShoots(f.shoots)
+	shoots := f.filters.filter(shootList)
 
 	return map[string]interface{}{
 		"shoots": shoots.Shoots,
@@ -78,11 +73,8 @@ func (f *gardenerFormater) YAML() interface{} {
 }
 
 func (f *gardenerFormater) JSON() interface{} {
-	if f.err != nil {
-		return map[string]interface{}{}
-	}
-
-	shoots := f.filters.filter(f.shoots)
+	shootList := mergeShoots(f.shoots)
+	shoots := f.filters.filter(shootList)
 
 	return map[string]interface{}{
 		"shoots": shoots.Shoots,
@@ -92,11 +84,8 @@ func (f *gardenerFormater) JSON() interface{} {
 func (f *gardenerFormater) Table() ([]string, [][]string) {
 	rows := [][]string{}
 
-	if f.err != nil {
-		return gardenerHeaders, rows
-	}
-
-	shoots := f.filters.filter(f.shoots)
+	shootList := mergeShoots(f.shoots)
+	shoots := f.filters.filter(shootList)
 
 	for i := range shoots.Shoots {
 		shoot := shoots.Shoots[i]
@@ -118,11 +107,7 @@ func (f *gardenerFormater) Table() ([]string, [][]string) {
 }
 
 func (f *gardenerFormater) Text(outFormat, errFormat string) string {
-	if f.err != nil {
-		return strings.ReplaceAll(errFormat, GardenerTextErrorFormat, f.err.Error())
-	}
-
-	shoots := f.shoots
+	shoots := mergeShoots(f.shoots)
 	directives := preGardenerDirectives.run(shoots, map[string]int{})
 
 	shoots = f.filters.filter(shoots)
@@ -135,6 +120,15 @@ func (f *gardenerFormater) Text(outFormat, errFormat string) string {
 	}
 
 	return str
+}
+
+func mergeShoots(m map[string]*cloud_agent.ShootList) *cloud_agent.ShootList {
+	l := &cloud_agent.ShootList{}
+	for key := range m {
+		l.Shoots = append(l.Shoots, m[key].Shoots...)
+	}
+
+	return l
 }
 
 type gardenerDirectiveMap map[string]func(*cloud_agent.Shoot) bool

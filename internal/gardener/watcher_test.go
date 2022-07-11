@@ -58,9 +58,10 @@ func Test_newWatchFunc(t *testing.T) {
 		clientBuilder func() (Client, error)
 	}
 	tests := []struct {
-		name string
-		args args
-		want *v1beta1.ShootList
+		name    string
+		args    args
+		want    *v1beta1.ShootList
+		wantErr bool
 	}{
 		{
 			name: "list resources",
@@ -75,6 +76,21 @@ func Test_newWatchFunc(t *testing.T) {
 			},
 			want: shootList,
 		},
+
+		{
+			name: "list resources with error",
+			args: args{
+				r: agent.NewCache[*v1beta1.ShootList]().Register("test"),
+				clientBuilder: func() (Client, error) {
+					c := automock.NewClient(t)
+					c.On("List", mock.Anything, v1.ListOptions{}).Return(nil, errors.New("test error")).Once()
+
+					return c, nil
+				},
+			},
+			wantErr: true,
+		},
+
 		{
 			name: "list error",
 			args: args{
@@ -86,7 +102,7 @@ func Test_newWatchFunc(t *testing.T) {
 					return c, nil
 				},
 			},
-			want: nil,
+			wantErr: true,
 		},
 		{
 			name: "client built error",
@@ -96,29 +112,7 @@ func Test_newWatchFunc(t *testing.T) {
 					return nil, errors.New("test error")
 				},
 			},
-			want: nil,
-		},
-		{
-			name: "first client built error",
-			args: args{
-				r: agent.NewCache[*v1beta1.ShootList]().Register("test"),
-				clientBuilder: func() func() (Client, error) {
-					// return error on first run only
-					i := 0
-					return func() (Client, error) {
-						if i == 0 {
-							i++
-							return nil, errors.New("test error")
-						}
-
-						c := automock.NewClient(t)
-						c.On("List", mock.Anything, v1.ListOptions{}).Return(shootList, nil).Once()
-
-						return c, nil
-					}
-				}(),
-			},
-			want: shootList,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -126,8 +120,12 @@ func Test_newWatchFunc(t *testing.T) {
 			newWatchFunc(l, tt.args.r, tt.args.clientBuilder)(context.Background())
 
 			got := tt.args.r.Get()
-			if !reflect.DeepEqual(got, tt.want) {
+			if tt.want != nil && !reflect.DeepEqual(got.Value, tt.want) {
 				t.Errorf("newWatchFunc() = %v, want %v", got, tt.want)
+			}
+
+			if (got.Error != nil) != tt.wantErr {
+				t.Errorf("NewClusterConfig() error = %v, wantErr %v", got.Error, tt.wantErr)
 			}
 		})
 	}

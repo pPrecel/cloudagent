@@ -24,9 +24,6 @@ func newWatchFunc(l *logrus.Entry, r agent.RegisteredResource[*v1beta1.ShootList
 	var c Client
 	var err error
 
-	// initialize client and error to be recognizable for the first run
-	c, err = clientBuilder()
-
 	return func(context context.Context) {
 		l.Debug("watching for resources")
 		if c == nil || err != nil {
@@ -34,12 +31,13 @@ func newWatchFunc(l *logrus.Entry, r agent.RegisteredResource[*v1beta1.ShootList
 			c, err = clientBuilder()
 			if err != nil {
 				l.Errorf("when creating gardener client: %s", err.Error())
+				r.Set(nil, err)
 				return
 			}
 		}
 
 		list, err := c.List(context, v1.ListOptions{})
-		r.Set(list)
+		r.Set(list, err)
 		if err != nil {
 			l.Errorf("when watching for shoots: %s", err.Error())
 			return
