@@ -7,9 +7,15 @@ import (
 	"github.com/pPrecel/cloudagent/internal/formater"
 	"github.com/pPrecel/cloudagent/internal/output"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+)
+
+const (
+	warningLog = "Warning: Some data may be not up to date because of cloudagent error.\nTry 'cloudagent check' for more info.\n\n"
 )
 
 func NewCmd(o *options) *cobra.Command {
@@ -47,14 +53,24 @@ func run(o *options) error {
 
 	o.Logger.Debugf("received: %+v, error: %v", list, err)
 
-	f := formater.NewGardener(err, list, formater.Filters{
+	if err != nil {
+		return errors.Wrap(err, "cloudagent internal error")
+	}
+
+	f := formater.NewGardener(list.ShootList, formater.Filters{
 		CreatedBy: o.createdBy,
 	})
+
+	// print warning
+	if isAnyError(o.Logger, list) {
+		o.Logger.Debug("printing warning log")
+		o.writer.Write([]byte(warningLog))
+	}
 
 	return o.outFormat.Print(o.writer, f)
 }
 
-func shootState(o *options) (*cloud_agent.ShootList, error) {
+func shootState(o *options) (*cloud_agent.GardenerResponse, error) {
 	o.Logger.Debug("creating grpc client")
 	conn, err := grpc.Dial(fmt.Sprintf("%s://%s", o.socketNetwork, o.socketAddress), grpc.WithInsecure())
 	if err != nil {
@@ -74,4 +90,21 @@ func shootState(o *options) (*cloud_agent.ShootList, error) {
 	}
 
 	return list, nil
+}
+
+func isAnyError(l *logrus.Logger, resp *cloud_agent.GardenerResponse) bool {
+	if resp.GeneralError != "" {
+		l.Debugf("got general error: '%s'", resp.GeneralError)
+		return true
+	}
+
+	for key := range resp.ShootList {
+		shootList := resp.ShootList[key]
+		if shootList != nil && shootList.Error != "" {
+			l.Debugf("got error: '%s'", shootList.Error)
+			return true
+		}
+	}
+
+	return false
 }

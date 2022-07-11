@@ -1,11 +1,21 @@
 package agent
 
-import "sync"
+import (
+	"sync"
+	"time"
+
+	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
+)
+
+type ServerCache struct {
+	GardenerCache Cache[*v1beta1.ShootList]
+	GeneralError  error
+}
 
 //go:generate mockery --name=RegisteredResource --output=automock --outpkg=automock
 type RegisteredResource[T any] interface {
-	Set(T)
-	Get() T
+	Set(T, error)
+	Get() Value[T]
 }
 
 type Cache[T any] interface {
@@ -38,19 +48,38 @@ func (c *cache[T]) Clean() {
 	c.resources = map[string]RegisteredResource[T]{}
 }
 
-type resource[T any] struct {
-	m   sync.Mutex
-	val T
+type Value[T any] struct {
+	Error error
+	Time  time.Time
+	Value T
 }
 
-func (r *resource[T]) Set(val T) {
+type resource[T any] struct {
+	m   sync.Mutex
+	val Value[T]
+}
+
+// Set - set value with time or error
+func (r *resource[T]) Set(val T, err error) {
 	r.m.Lock()
 	defer r.m.Unlock()
 
-	r.val = val
+	// set error only to not override existing last set value
+	if err != nil {
+		r.val.Error = err
+		return
+	}
+
+	// create new object to override last error
+	r.val = Value[T]{
+		Value: val,
+		Error: nil,
+		Time:  time.Now(),
+	}
 }
 
-func (r *resource[T]) Get() T {
+// Get - returns latest Value object
+func (r *resource[T]) Get() Value[T] {
 	r.m.Lock()
 	defer r.m.Unlock()
 

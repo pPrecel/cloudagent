@@ -3,7 +3,6 @@ package watcher
 import (
 	"context"
 
-	v1beta1_apis "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloudagent/internal/gardener"
 	"github.com/pPrecel/cloudagent/internal/system"
 	"github.com/pPrecel/cloudagent/pkg/agent"
@@ -14,7 +13,7 @@ import (
 type Options struct {
 	Context    context.Context
 	Logger     *logrus.Entry
-	Cache      agent.Cache[*v1beta1_apis.ShootList]
+	Cache      *agent.ServerCache
 	ConfigPath string
 }
 
@@ -66,7 +65,7 @@ func (w *watcher) newWatcher(o *Options) (*agent.Watcher, error) {
 	funcs := []agent.WatchFn{}
 	for i := range config.GardenerProjects {
 		p := config.GardenerProjects[i]
-		r := o.Cache.Register(p.Namespace)
+		r := o.Cache.GardenerCache.Register(p.Namespace)
 
 		o.Logger.Debugf("creating watcher func for namespace: '%s'", p.Namespace)
 		l := o.Logger.WithFields(

@@ -71,7 +71,9 @@ func Test_watcher_Start(t *testing.T) {
 				Context:    context.Background(),
 				Logger:     l,
 				ConfigPath: "",
-				Cache:      agent.NewCache[*v1beta1.ShootList](),
+				Cache: &agent.ServerCache{
+					GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+				},
 			},
 			wantErr: false,
 		},
@@ -96,7 +98,9 @@ func Test_watcher_Start(t *testing.T) {
 				Context:    context.Background(),
 				Logger:     l,
 				ConfigPath: "",
-				Cache:      agent.NewCache[*v1beta1.ShootList](),
+				Cache: &agent.ServerCache{
+					GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+				},
 			},
 			wantErr: true,
 		},
@@ -111,7 +115,9 @@ func Test_watcher_Start(t *testing.T) {
 				Context:    context.Background(),
 				Logger:     l,
 				ConfigPath: "",
-				Cache:      agent.NewCache[*v1beta1.ShootList](),
+				Cache: &agent.ServerCache{
+					GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+				},
 			},
 			wantErr: true,
 		},
@@ -127,7 +133,9 @@ func Test_watcher_Start(t *testing.T) {
 				Context:    context.Background(),
 				Logger:     l,
 				ConfigPath: "",
-				Cache:      agent.NewCache[*v1beta1.ShootList](),
+				Cache: &agent.ServerCache{
+					GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+				},
 			},
 			wantErr: true,
 		},

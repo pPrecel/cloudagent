@@ -27,7 +27,7 @@ To start server create configuration file first ([read more here](./configuratio
 cloudagent-dev serve
 ```
 
-## Re-generate protobuf
+## Re-generate [protobuf](https://grpc.io/docs/languages/go/quickstart/)
 
 Communication between cloudagent server and client is being implemented by using the `unix-socket` and `gRPC` protocol. If your change touches the `proto` folder then you have to regenerate protobuf package. To do it use:
 

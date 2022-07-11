@@ -7,6 +7,7 @@ import (
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -127,6 +128,7 @@ var (
 		},
 	}
 	testAgentShootList2 = &cloud_agent.ShootList{
+		Error: "test error",
 		Shoots: []*cloud_agent.Shoot{
 			{
 				Name:      "name1",
@@ -152,23 +154,31 @@ func Test_server_GardenerShoots(t *testing.T) {
 	l.Logger.Out = io.Discard
 
 	type fields struct {
-		gardenerCache Cache[*v1beta1.ShootList]
+		gardenerCache *ServerCache
 		logger        *logrus.Entry
 	}
 	tests := []struct {
 		name    string
 		fields  fields
-		want    *cloud_agent.ShootList
+		want    map[string]*cloud_agent.ShootList
 		wantErr bool
 	}{
 		{
-			name: "empty state list",
+			name: "nil server cache",
 			fields: fields{
-				gardenerCache: fixShootListCache(&v1beta1.ShootList{}),
+				gardenerCache: nil,
 				logger:        l,
+			}, wantErr: true,
+		},
+		{
+			name: "nil gardener cache",
+			fields: fields{
+				gardenerCache: &ServerCache{
+					GardenerCache: nil,
+				},
+				logger: l,
 			},
-			want:    &cloud_agent.ShootList{},
-			wantErr: false,
+			wantErr: true,
 		},
 		{
 			name: "state list",
@@ -176,7 +186,9 @@ func Test_server_GardenerShoots(t *testing.T) {
 				gardenerCache: fixShootListCache(testGardenerShootList),
 				logger:        l,
 			},
-			want:    testAgentShootList,
+			want: map[string]*cloud_agent.ShootList{
+				"test": testAgentShootList,
+			},
 			wantErr: false,
 		},
 		{
@@ -185,17 +197,12 @@ func Test_server_GardenerShoots(t *testing.T) {
 				gardenerCache: fixShootListCache(nil),
 				logger:        l,
 			},
-			want:    &cloud_agent.ShootList{},
-			wantErr: false,
-		},
-		{
-			name: "nil cache",
-			fields: fields{
-				gardenerCache: nil,
-				logger:        l,
+			want: map[string]*cloud_agent.ShootList{
+				"test": {
+					Shoots: []*cloud_agent.Shoot{},
+				},
 			},
-			want:    nil,
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "multiple cache keys",
@@ -203,8 +210,34 @@ func Test_server_GardenerShoots(t *testing.T) {
 				gardenerCache: fixShootListCache2(),
 				logger:        l,
 			},
-			want: &cloud_agent.ShootList{
-				Shoots: append(testAgentShootList2.Shoots, testAgentShootList.Shoots...),
+			want: map[string]*cloud_agent.ShootList{
+				"test":  testAgentShootList,
+				"test2": testAgentShootList2,
+			},
+			wantErr: false,
+		},
+		{
+			name: "geenral error",
+			fields: fields{
+				gardenerCache: &ServerCache{
+					GardenerCache: NewCache[*v1beta1.ShootList](),
+					GeneralError:  errors.New("test error"),
+				},
+				logger: l,
+			},
+			want:    nil,
+			wantErr: false,
+		},
+		{
+			name: "empty cache",
+			fields: fields{
+				gardenerCache: fixShootListCache(&v1beta1.ShootList{}),
+				logger:        l,
+			},
+			want: map[string]*cloud_agent.ShootList{
+				"test": {
+					Shoots: []*cloud_agent.Shoot{},
+				},
 			},
 			wantErr: false,
 		},
@@ -212,8 +245,8 @@ func Test_server_GardenerShoots(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := NewServer(&ServerOption{
-				GardenerCache: tt.fields.gardenerCache,
-				Logger:        tt.fields.logger,
+				Cache:  tt.fields.gardenerCache,
+				Logger: tt.fields.logger,
 			})
 			got, err := s.GardenerShoots(context.Background(), &cloud_agent.Empty{})
 			if (err != nil) != tt.wantErr {
@@ -222,28 +255,60 @@ func Test_server_GardenerShoots(t *testing.T) {
 			}
 
 			if tt.want != nil {
-				assert.ElementsMatch(t, got.Shoots, tt.want.Shoots)
+				compareMaps(t, tt.want, got.ShootList)
 			}
 		})
 	}
 }
 
-func fixShootListCache(s *v1beta1.ShootList) Cache[*v1beta1.ShootList] {
+func compareMaps(t *testing.T, m1, m2 map[string]*cloud_agent.ShootList) {
+
+	// check maps len
+	assert.Equal(t, len(m1), len(m2))
+
+	// check if maps are nil
+	if m1 == nil {
+		assert.Nil(t, m2)
+		return
+	}
+
+	for key := range m1 {
+
+		// if first map elem == nil then second should be nil
+		if m1[key] == nil {
+			assert.Nil(t, m2[key])
+			continue
+		}
+
+		// if not then compare values
+		assert.Equal(t, m1[key].Shoots, m2[key].Shoots)
+		assert.Equal(t, m1[key].Error, m2[key].Error)
+	}
+}
+
+func fixShootListCache(s *v1beta1.ShootList) *ServerCache {
 	c := NewCache[*v1beta1.ShootList]()
 
 	c.Clean()
 
 	r := c.Register("test")
-	r.Set(s)
+	r.Set(s, nil)
 
-	return c
+	return &ServerCache{
+		GardenerCache: c,
+	}
 }
 
-func fixShootListCache2() Cache[*v1beta1.ShootList] {
+func fixShootListCache2() *ServerCache {
 	c := fixShootListCache(testGardenerShootList)
 
-	r := c.Register("test2")
-	r.Set(testGardenerShootList2)
+	r := c.GardenerCache.Register("test2")
+
+	// set value only
+	r.Set(testGardenerShootList2, nil)
+
+	// set error separately to not override test value (to keep both)
+	r.Set(nil, errors.New("test error"))
 
 	return c
 }

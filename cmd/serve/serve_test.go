@@ -105,7 +105,9 @@ func Test_startWatcher(t *testing.T) {
 	l.Out = io.Discard
 
 	t.Run("handle error", func(t *testing.T) {
-		c := agent.NewCache[*v1beta1_apis.ShootList]()
+		c := &agent.ServerCache{
+			GardenerCache: agent.NewCache[*v1beta1_apis.ShootList](),
+		}
 		startWatcher(&options{
 			Options: &command.Options{
 				Logger:  l,
@@ -115,6 +117,6 @@ func Test_startWatcher(t *testing.T) {
 			socketAddress: testAddress,
 		}, c)
 
-		assert.Len(t, c.Resources(), 0)
+		assert.Len(t, c.GardenerCache.Resources(), 0)
 	})
 }
