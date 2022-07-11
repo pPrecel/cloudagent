@@ -6,5 +6,5 @@ import (
 )
 
 func ToGardenerResponse(cache agent.Cache[*v1beta1.ShootList]) *ShootList {
-	
+
 }
