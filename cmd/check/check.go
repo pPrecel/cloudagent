@@ -23,7 +23,7 @@ func NewCmd(o *options) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().VarP(output.NewFlag(&o.outFormat, "table", "$g/$G/$a", "-/-/-/-"), "output", "o", ``)
+	cmd.Flags().VarP(output.NewFlag(&o.outFormat, "table", "$h/$e/$a", "$E"), "output", "o", ``)
 	cmd.Flags().DurationVarP(&o.timeout, "timeout", "t", 2*time.Second, "Provides timeout for the command.")
 	cmd.Flags().StringVar(&o.socketAddress, "socket-path", agent.Address, "Provides path to the socket file.")
 
@@ -39,7 +39,7 @@ func run(o *options) error {
 
 	// print warning
 	if list != nil && list.GeneralError != "" &&
-		o.outFormat.ErrorFormat() == string(output.TableType) {
+		o.outFormat.Type() == string(output.TableType) {
 		o.Logger.Debug("printing warning log")
 		o.stdout.Write([]byte(list.GeneralError))
 	}
@@ -49,8 +49,9 @@ func run(o *options) error {
 }
 
 func shootState(o *options) (*cloud_agent.GardenerResponse, error) {
-	o.Logger.Debug("creating grpc client")
-	conn, err := grpc.Dial(fmt.Sprintf("%s://%s", o.socketNetwork, o.socketAddress), grpc.WithInsecure())
+	target := fmt.Sprintf("%s://%s", o.socketNetwork, o.socketAddress)
+	o.Logger.Debugf("creating grpc client - target '%s'", target)
+	conn, err := grpc.Dial(target, grpc.WithInsecure())
 	if err != nil {
 		o.Logger.Debugf("fail to dial: %v", err)
 		return nil, err

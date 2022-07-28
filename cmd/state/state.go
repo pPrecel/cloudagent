@@ -74,8 +74,9 @@ func run(o *options) error {
 }
 
 func shootState(o *options) (*cloud_agent.GardenerResponse, error) {
-	o.Logger.Debug("creating grpc client")
-	conn, err := grpc.Dial(fmt.Sprintf("%s://%s", o.socketNetwork, o.socketAddress), grpc.WithInsecure())
+	target := fmt.Sprintf("%s://%s", o.socketNetwork, o.socketAddress)
+	o.Logger.Debugf("creating grpc client - target '%s'", target)
+	conn, err := grpc.Dial(target, grpc.WithInsecure())
 	if err != nil {
 		o.Logger.Debugf("fail to dial: %v", err)
 		return nil, err

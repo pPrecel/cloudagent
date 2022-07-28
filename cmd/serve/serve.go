@@ -51,7 +51,7 @@ func run(o *options) error {
 		}
 	}()
 
-	o.Logger.Debug("configuring grpc server")
+	o.Logger.Debugf("configuring grpc server - network '%s', address '%s'", o.socketNetwork, o.socketAddress)
 	lis, err := agent.NewSocket(o.socketNetwork, o.socketAddress)
 	if err != nil {
 		return err
