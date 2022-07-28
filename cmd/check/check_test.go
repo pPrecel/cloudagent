@@ -1,4 +1,4 @@
-package state
+package check
 
 import (
 	"context"
@@ -25,21 +25,18 @@ func TestNewCmd(t *testing.T) {
 	c := NewCmd(o)
 
 	t.Run("defaults", func(t *testing.T) {
-		assert.Equal(t, "", o.createdBy)
-		assert.Equal(t, *output.NewFlag(&output.Flag{}, "table", "$r/$h/$x/$a", "-/-/-/-"), o.outFormat)
+		assert.Equal(t, *output.NewFlag(&output.Flag{}, "table", "$h/$e/$a", "$E"), o.outFormat)
 		assert.Equal(t, 2*time.Second, o.timeout)
 		assert.Equal(t, agent.Address, o.socketAddress)
 	})
 
 	t.Run("parse flags", func(t *testing.T) {
 		c.ParseFlags([]string{
-			"--created-by", "owner",
 			"--output", "text=$a=$e",
 			"--timeout", "5s",
 			"--socket-path", "/tmp/tmpsocket.sock",
 		})
 
-		assert.Equal(t, "owner", o.createdBy)
 		assert.Equal(t, *output.NewFlag(&output.Flag{}, "text", "$a", "$e"), o.outFormat)
 		assert.Equal(t, 5*time.Second, o.timeout)
 		assert.Equal(t, "/tmp/tmpsocket.sock", o.socketAddress)
@@ -47,12 +44,10 @@ func TestNewCmd(t *testing.T) {
 
 	t.Run("parse shortcuts", func(t *testing.T) {
 		c.ParseFlags([]string{
-			"-c", "other-owner",
 			"-o", "text=$a$a$a=$e$e$e",
 			"-t", "10s",
 		})
 
-		assert.Equal(t, "other-owner", o.createdBy)
 		assert.Equal(t, *output.NewFlag(&output.Flag{}, "text", "$a$a$a", "$e$e$e"), o.outFormat)
 		assert.Equal(t, 10*time.Second, o.timeout)
 	})
@@ -79,17 +74,16 @@ func Test_run(t *testing.T) {
 		defer stopFn()
 
 		o := &options{
-			writer: io.Discard,
+			stdout: io.Discard,
 			Options: &command.Options{
 				Logger:  l.Logger,
 				Context: context.Background(),
 			},
 		}
 		cmd := NewCmd(o)
-		o.createdBy = "owner"
 		o.socketAddress = socketAddress
 		o.socketNetwork = socketNetwork
-		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$r/$h/$u/$a", "-/-/-/-")
+		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$a", "-")
 
 		r.Set(&v1beta1.ShootList{
 			Items: []v1beta1.Shoot{
@@ -100,20 +94,18 @@ func Test_run(t *testing.T) {
 		err = cmd.RunE(cmd, []string{})
 		assert.NoError(t, err)
 	})
-
 	t.Run("client error", func(t *testing.T) {
 		c := agent.NewCache[*v1beta1.ShootList]()
 		r := c.Register("test-data")
 
 		o := &options{
-			writer: io.Discard,
+			stdout: io.Discard,
 			Options: &command.Options{
 				Logger:  l.Logger,
 				Context: context.Background(),
 			},
 		}
 		cmd := NewCmd(o)
-		o.createdBy = "owner"
 		o.socketAddress = socketAddress
 		o.socketNetwork = socketNetwork
 		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$a", "$e")
@@ -133,14 +125,13 @@ func Test_run(t *testing.T) {
 		r := c.Register("test-data")
 
 		o := &options{
-			writer: io.Discard,
+			stdout: io.Discard,
 			Options: &command.Options{
 				Logger:  l.Logger,
 				Context: context.Background(),
 			},
 		}
 		cmd := NewCmd(o)
-		o.createdBy = "owner"
 		o.socketAddress = "\n"
 		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$a", "$e")
 
@@ -153,58 +144,26 @@ func Test_run(t *testing.T) {
 		err := cmd.RunE(cmd, []string{})
 		assert.Error(t, err)
 	})
-	t.Run("request error", func(t *testing.T) {
+	t.Run("general error", func(t *testing.T) {
 		c := &agent.ServerCache{
 			GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+			GeneralError:  errors.New("test error"),
 		}
-		r := c.GardenerCache.Register("test-data")
 		stopFn, err := fixServer(l, c)
 		assert.NoError(t, err)
 		defer stopFn()
 
 		o := &options{
-			writer: io.Discard,
+			stdout: io.Discard,
 			Options: &command.Options{
 				Logger:  l.Logger,
 				Context: context.Background(),
 			},
 		}
 		cmd := NewCmd(o)
-		o.createdBy = "owner"
 		o.socketAddress = socketAddress
 		o.socketNetwork = socketNetwork
 		o.outFormat = *output.NewFlag(&o.outFormat, output.TableType, "$r/$h/$u/$a", "-/-/-/-")
-
-		r.Set(&v1beta1.ShootList{
-			Items: []v1beta1.Shoot{
-				{}, {}, {},
-			},
-		}, errors.New("test error"))
-
-		err = cmd.RunE(cmd, []string{})
-		assert.NoError(t, err)
-	})
-	t.Run("request general error", func(t *testing.T) {
-		c := &agent.ServerCache{
-			GeneralError:  errors.New("test error"),
-			GardenerCache: agent.NewCache[*v1beta1.ShootList](),
-		}
-		stopFn, err := fixServer(l, c)
-		assert.NoError(t, err)
-		defer stopFn()
-
-		o := &options{
-			writer: io.Discard,
-			Options: &command.Options{
-				Logger:  l.Logger,
-				Context: context.Background(),
-			},
-		}
-		cmd := NewCmd(o)
-		o.createdBy = "owner"
-		o.socketAddress = socketAddress
-		o.socketNetwork = socketNetwork
-		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$r/$h/$u/$a", "-/-/-/-")
 
 		err = cmd.RunE(cmd, []string{})
 		assert.NoError(t, err)

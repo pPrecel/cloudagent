@@ -30,6 +30,7 @@ func NewCmd(o *options) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&o.configPath, "config-path", "c", config.ConfigPath, "Provides path to the config file.")
+	cmd.Flags().StringVar(&o.socketAddress, "socket-path", agent.Address, "Provides path to the socket file.")
 
 	return cmd
 }
@@ -50,7 +51,7 @@ func run(o *options) error {
 		}
 	}()
 
-	o.Logger.Debug("configuring grpc server")
+	o.Logger.Debugf("configuring grpc server - network '%s', address '%s'", o.socketNetwork, o.socketAddress)
 	lis, err := agent.NewSocket(o.socketNetwork, o.socketAddress)
 	if err != nil {
 		return err

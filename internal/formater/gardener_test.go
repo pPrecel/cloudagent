@@ -217,7 +217,7 @@ func Test_state_Text(t *testing.T) {
 		want   string
 	}{
 		{
-			name: "get table",
+			name: "get text",
 			fields: fields{
 				shoots: map[string]*cloud_agent.ShootList{
 					"test1": testShoots,

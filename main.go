@@ -5,6 +5,7 @@ import (
 	"os"
 
 	command "github.com/pPrecel/cloudagent/cmd"
+	"github.com/pPrecel/cloudagent/cmd/check"
 	"github.com/pPrecel/cloudagent/cmd/config"
 	"github.com/pPrecel/cloudagent/cmd/logs"
 	"github.com/pPrecel/cloudagent/cmd/serve"
@@ -42,6 +43,7 @@ func main() {
 		config.NewCmd(config.NewOptions(o)),
 		serve.NewCmd(serve.NewOptions(o)),
 		state.NewCmd(state.NewOptions(o)),
+		check.NewCmd(check.NewOptions(o)),
 		logs.NewCmd(logs.NewOptions(o)),
 		version.NewCmd(o),
 	)

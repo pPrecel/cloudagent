@@ -1,4 +1,4 @@
-package state
+package check
 
 import (
 	"io"
@@ -13,19 +13,17 @@ import (
 type options struct {
 	*command.Options
 
-	createdBy string
-	outFormat output.Flag
-	timeout   time.Duration
-
+	stdout        io.Writer
+	outFormat     output.Flag
+	timeout       time.Duration
 	socketAddress string
 	socketNetwork string
-	writer        io.Writer
 }
 
-func NewOptions(opts *command.Options) *options {
+func NewOptions(o *command.Options) *options {
 	return &options{
-		Options:       opts,
+		Options:       o,
+		stdout:        os.Stdout,
 		socketNetwork: agent.Network,
-		writer:        os.Stdout,
 	}
 }
