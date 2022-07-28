@@ -6,6 +6,7 @@ import (
 
 	"github.com/pPrecel/cloudagent/internal/formater"
 	"github.com/pPrecel/cloudagent/internal/output"
+	"github.com/pPrecel/cloudagent/pkg/agent"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -43,6 +44,7 @@ The first one can contains at least on out of four elements where:
 
 The second one can contains '`+formater.GardenerTextErrorFormat+`'  which will be replaced with error message.`)
 	cmd.Flags().DurationVarP(&o.timeout, "timeout", "t", 2*time.Second, "Provides timeout for the command.")
+	cmd.Flags().StringVar(&o.socketAddress, "socket-path", agent.Address, "Provides path to the socket file.")
 
 	return cmd
 }
@@ -62,7 +64,8 @@ func run(o *options) error {
 	})
 
 	// print warning
-	if isAnyError(o.Logger, list) {
+	if isAnyError(o.Logger, list) &&
+		o.outFormat.Type() == string(output.TableType) {
 		o.Logger.Debug("printing warning log")
 		o.writer.Write([]byte(warningLog))
 	}

@@ -30,6 +30,7 @@ func NewCmd(o *options) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&o.configPath, "config-path", "c", config.ConfigPath, "Provides path to the config file.")
+	cmd.Flags().StringVar(&o.socketAddress, "socket-path", agent.Address, "Provides path to the socket file.")
 
 	return cmd
 }

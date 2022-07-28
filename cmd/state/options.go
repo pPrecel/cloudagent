@@ -25,7 +25,6 @@ type options struct {
 func NewOptions(opts *command.Options) *options {
 	return &options{
 		Options:       opts,
-		socketAddress: agent.Address,
 		socketNetwork: agent.Network,
 		writer:        os.Stdout,
 	}

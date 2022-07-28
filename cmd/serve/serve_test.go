@@ -22,14 +22,17 @@ func TestNewCmd(t *testing.T) {
 
 	t.Run("defaults", func(t *testing.T) {
 		assert.Equal(t, config.ConfigPath, o.configPath)
+		assert.Equal(t, agent.Address, o.socketAddress)
 	})
 
 	t.Run("parse flags", func(t *testing.T) {
 		c.ParseFlags([]string{
 			"--config-path", "path",
+			"--socket-path", "path.sock",
 		})
 
 		assert.Equal(t, "path", o.configPath)
+		assert.Equal(t, "path.sock", o.socketAddress)
 	})
 
 	t.Run("parse shortcuts", func(t *testing.T) {
@@ -57,9 +60,10 @@ func Test_run(t *testing.T) {
 			},
 			configPath:    "/empty/path",
 			socketNetwork: testNetwork,
-			socketAddress: testAddress,
 		}
 		c := NewCmd(o)
+
+		o.socketAddress = testAddress
 
 		err := c.PreRunE(c, []string{})
 		assert.NoError(t, err)
@@ -91,10 +95,11 @@ func Test_run(t *testing.T) {
 				Context: context.Background(),
 			},
 			socketNetwork: testNetwork,
-			socketAddress: "/addr\n\n\n",
 		}
 
 		c := NewCmd(o)
+
+		o.socketAddress = "/addr\n\n\n"
 
 		assert.Error(t, c.RunE(c, []string{}))
 	})

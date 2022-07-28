@@ -28,6 +28,7 @@ func TestNewCmd(t *testing.T) {
 		assert.Equal(t, "", o.createdBy)
 		assert.Equal(t, *output.NewFlag(&output.Flag{}, "table", "$r/$h/$x/$a", "-/-/-/-"), o.outFormat)
 		assert.Equal(t, 2*time.Second, o.timeout)
+		assert.Equal(t, agent.Address, o.socketAddress)
 	})
 
 	t.Run("parse flags", func(t *testing.T) {
@@ -35,11 +36,13 @@ func TestNewCmd(t *testing.T) {
 			"--created-by", "owner",
 			"--output", "text=$a=$e",
 			"--timeout", "5s",
+			"--socket-path", "/tmp/tmpsocket.sock",
 		})
 
 		assert.Equal(t, "owner", o.createdBy)
 		assert.Equal(t, *output.NewFlag(&output.Flag{}, "text", "$a", "$e"), o.outFormat)
 		assert.Equal(t, 5*time.Second, o.timeout)
+		assert.Equal(t, "/tmp/tmpsocket.sock", o.socketAddress)
 	})
 
 	t.Run("parse shortcuts", func(t *testing.T) {
@@ -76,9 +79,7 @@ func Test_run(t *testing.T) {
 		defer stopFn()
 
 		o := &options{
-			socketAddress: socketAddress,
-			socketNetwork: socketNetwork,
-			writer:        io.Discard,
+			writer: io.Discard,
 			Options: &command.Options{
 				Logger:  l.Logger,
 				Context: context.Background(),
@@ -86,6 +87,8 @@ func Test_run(t *testing.T) {
 		}
 		cmd := NewCmd(o)
 		o.createdBy = "owner"
+		o.socketAddress = socketAddress
+		o.socketNetwork = socketNetwork
 		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$r/$h/$u/$a", "-/-/-/-")
 
 		r.Set(&v1beta1.ShootList{
@@ -103,9 +106,7 @@ func Test_run(t *testing.T) {
 		r := c.Register("test-data")
 
 		o := &options{
-			socketAddress: socketAddress,
-			socketNetwork: socketNetwork,
-			writer:        io.Discard,
+			writer: io.Discard,
 			Options: &command.Options{
 				Logger:  l.Logger,
 				Context: context.Background(),
@@ -113,6 +114,8 @@ func Test_run(t *testing.T) {
 		}
 		cmd := NewCmd(o)
 		o.createdBy = "owner"
+		o.socketAddress = socketAddress
+		o.socketNetwork = socketNetwork
 		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$a", "$e")
 
 		r.Set(&v1beta1.ShootList{
@@ -130,8 +133,7 @@ func Test_run(t *testing.T) {
 		r := c.Register("test-data")
 
 		o := &options{
-			socketAddress: "\n",
-			writer:        io.Discard,
+			writer: io.Discard,
 			Options: &command.Options{
 				Logger:  l.Logger,
 				Context: context.Background(),
@@ -139,6 +141,7 @@ func Test_run(t *testing.T) {
 		}
 		cmd := NewCmd(o)
 		o.createdBy = "owner"
+		o.socketAddress = "\n"
 		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$a", "$e")
 
 		r.Set(&v1beta1.ShootList{
@@ -160,9 +163,7 @@ func Test_run(t *testing.T) {
 		defer stopFn()
 
 		o := &options{
-			socketAddress: socketAddress,
-			socketNetwork: socketNetwork,
-			writer:        io.Discard,
+			writer: io.Discard,
 			Options: &command.Options{
 				Logger:  l.Logger,
 				Context: context.Background(),
@@ -170,6 +171,8 @@ func Test_run(t *testing.T) {
 		}
 		cmd := NewCmd(o)
 		o.createdBy = "owner"
+		o.socketAddress = socketAddress
+		o.socketNetwork = socketNetwork
 		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$r/$h/$u/$a", "-/-/-/-")
 
 		r.Set(&v1beta1.ShootList{
@@ -191,9 +194,7 @@ func Test_run(t *testing.T) {
 		defer stopFn()
 
 		o := &options{
-			socketAddress: socketAddress,
-			socketNetwork: socketNetwork,
-			writer:        io.Discard,
+			writer: io.Discard,
 			Options: &command.Options{
 				Logger:  l.Logger,
 				Context: context.Background(),
@@ -201,6 +202,8 @@ func Test_run(t *testing.T) {
 		}
 		cmd := NewCmd(o)
 		o.createdBy = "owner"
+		o.socketAddress = socketAddress
+		o.socketNetwork = socketNetwork
 		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$r/$h/$u/$a", "-/-/-/-")
 
 		err = cmd.RunE(cmd, []string{})
