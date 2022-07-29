@@ -1,9 +1,10 @@
 CLOUDAGENT_PATH ?= /usr/local/bin/cloudagent-dev
+GITHUB_REF_NAME ?= local
 CURRENT_DIR = $(shell pwd)
 
 .PHONY: build
 build:
-	go build -ldflags="-X 'main.Version=${GITHUB_REF_NAME}'" -o .out/cloudagent main.go
+	go build -ldflags="-X 'main.version=${GITHUB_REF_NAME}'" -o .out/cloudagent main.go
 
 .PHONY: rm-from-path
 rm-from-path:

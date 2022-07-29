@@ -10,16 +10,16 @@ import (
 	"github.com/pPrecel/cloudagent/cmd/logs"
 	"github.com/pPrecel/cloudagent/cmd/serve"
 	"github.com/pPrecel/cloudagent/cmd/state"
-	"github.com/pPrecel/cloudagent/cmd/version"
+	cmd_version "github.com/pPrecel/cloudagent/cmd/version"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-var Version = "local"
+var version = "local"
 
 func main() {
 	o := &command.Options{
-		Version: Version,
+		Version: version,
 		Context: context.Background(),
 		Logger:  newLogger(),
 	}
@@ -45,7 +45,7 @@ func main() {
 		state.NewCmd(state.NewOptions(o)),
 		check.NewCmd(check.NewOptions(o)),
 		logs.NewCmd(logs.NewOptions(o)),
-		version.NewCmd(o),
+		cmd_version.NewCmd(o),
 	)
 
 	_ = cmd.Execute()

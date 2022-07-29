@@ -10,8 +10,6 @@ builds:
       - CGO_ENABLED=0
     binary: cloudagent
     main: ./main.go
-    ldflags:
-      - -X "main.Version={{.ENV.GITHUB_REF_NAME}}"
     goos:
       - linux
       - darwin
