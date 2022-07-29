@@ -3,7 +3,7 @@ CURRENT_DIR = $(shell pwd)
 
 .PHONY: build
 build:
-	./hack/build.sh
+	go build -ldflags="-X 'main.Version=${GITHUB_REF_NAME}'" -o .out/cloudagent main.go
 
 .PHONY: rm-from-path
 rm-from-path:
