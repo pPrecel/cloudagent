@@ -6,6 +6,7 @@ import (
 	"time"
 
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -150,11 +151,11 @@ func Test_checkFormater_Table(t *testing.T) {
 				resp: tt.fields.resp,
 			}
 			got, got1 := f.Table()
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("checkFormater.Table() got = %v, want %v", got, tt.want)
-			}
-			if !reflect.DeepEqual(got1, tt.want1) {
-				t.Errorf("checkFormater.Table() got1 = %v, want %v", got1, tt.want1)
+
+			assert.Equal(t, got, tt.want)
+			assert.Len(t, got1, len(tt.want1))
+			for i := range tt.want1 {
+				assert.Contains(t, got1, tt.want1[i])
 			}
 		})
 	}
