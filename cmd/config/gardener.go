@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/pkg/errors"
@@ -13,16 +14,21 @@ const (
 	delArg = "del"
 )
 
+var (
+	validArgs = []string{addArg, delArg}
+)
+
 func newGardenerCmd(o *gardenerOptions) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "gardener",
+		Use:   "gardener [" + strings.Join(validArgs, "|") + "]",
 		Short: "Manage gardener projecs in the configuration file.",
 		Long:  "Add or delete gardeners project to the configuration file.",
 		Args: cobra.MatchAll(
 			cobra.MinimumNArgs(1),
 			cobra.MaximumNArgs(1),
+			cobra.OnlyValidArgs,
 		),
-		ValidArgs: []string{"add", "del"},
+		ValidArgs: validArgs,
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			switch args[0] {
 			case addArg:
@@ -41,6 +47,11 @@ func newGardenerCmd(o *gardenerOptions) *cobra.Command {
 			}
 			return errors.New(fmt.Sprintf("unsupported argument: %s", args[0]))
 		},
+		Example: `  # Add gardener project
+  cloudagent config gardener add --namespace <namespace> --kubeconfig <path>
+
+  # Delete gardener project
+  cloudagent config gardener del --namespace <namespace>`,
 	}
 
 	cmd.Flags().StringVarP(&o.namespace, "namespace", "n", "", "The name of the gardener project.")

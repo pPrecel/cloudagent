@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	ConfigTextErrorFormat      = "$e"
+	ConfigTextErrorFormat      = "$E"
 	ConfigTextAllFormat        = "$a"
 	ConfigTextPersistentFormat = "$p"
 	ConfigTextGardenerFormat   = "$g"

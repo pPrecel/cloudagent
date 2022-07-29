@@ -21,9 +21,28 @@ func NewCmd(o *options) *cobra.Command {
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return run(o)
 		},
+		Example: `  # Check agent
+  cloudagent check
+  
+  # Check with text output
+  cloudagent check -o text
+  
+  # Check with custom test output
+  cloudagent check -o text=$a=$E`,
 	}
 
-	cmd.Flags().VarP(output.NewFlag(&o.outFormat, "table", "$h/$e/$a", "$E"), "output", "o", ``)
+	cmd.Flags().VarP(output.NewFlag(&o.outFormat, "table", "$h/$e/$a", "$E"), "output", "o", `Provides format for the output information. 
+	
+	For the 'text' output format you can specifie two more informations by spliting them using '='. The first one would be used as output format and second as error format.
+	
+	The first one can contains at least on out of four elements where:
+	- '`+formater.CheckTextAllFormat+`' represents number of all projects,
+	- '`+formater.CheckTextHealthyFormat+`' represents number of all healthy projects,
+	- '`+formater.CheckTextErrorCountFormat+`' represents number of all projects with error,
+	- '`+formater.CheckTextErrorFormat+`' represents error message.
+
+	
+	The second one can contains '`+formater.CheckTextErrorFormat+`'  which will be replaced with error message when response is nil.`)
 	cmd.Flags().DurationVarP(&o.timeout, "timeout", "t", 2*time.Second, "Provides timeout for the command.")
 	cmd.Flags().StringVar(&o.socketAddress, "socket-path", agent.Address, "Provides path to the socket file.")
 

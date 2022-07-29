@@ -16,6 +16,11 @@ func NewCmd(o *options) *cobra.Command {
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return run(o)
 		},
+		Example: `  # Get config
+  cloudagent config
+
+  # Get config with custom test output
+  cloudagent config -o text=$a=$E`,
 	}
 
 	cmd.AddCommand(
