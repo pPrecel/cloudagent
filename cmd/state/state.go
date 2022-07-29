@@ -27,6 +27,14 @@ func NewCmd(o *options) *cobra.Command {
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return run(o)
 		},
+		Example: `  # State
+  cloudagent state
+  
+  # State with text output
+  cloudagent state -o text
+  
+  # State with custom test output
+  cloudagent state -o text=$a=$E`,
 	}
 
 	cmd.Flags().StringVarP(&o.createdBy, "created-by", "c", "", "Show clusters created by specific person.")
@@ -40,7 +48,7 @@ The first one can contains at least on out of four elements where:
 - '`+formater.GardenerTextUnknownFormat+`' represents number of clusters with the UNKNOWN status,
 - '`+formater.GardenerTextEmptyFormat+`' represents number of clusters with the EMPTY status,
 - '`+formater.GardenerTextEmptyUnknownFormat+`' represents number of clusters with the EMPTY or the UNKNOWN status,
-- '`+formater.GardenerTextAllFormat+`' represents of all clusters in namespace.
+- '`+formater.GardenerTextAllFormat+`' represents number of all clusters in namespace.
 
 The second one can contains '`+formater.GardenerTextErrorFormat+`'  which will be replaced with error message.`)
 	cmd.Flags().DurationVarP(&o.timeout, "timeout", "t", 2*time.Second, "Provides timeout for the command.")

@@ -220,7 +220,7 @@ func Test_configFormater_Text(t *testing.T) {
 			},
 			args: args{
 				outFormat: "",
-				errFormat: "$e",
+				errFormat: "$E",
 			},
 			want: "nil config",
 		},
@@ -232,7 +232,7 @@ func Test_configFormater_Text(t *testing.T) {
 			},
 			args: args{
 				outFormat: "$a$g$G$p",
-				errFormat: "$e",
+				errFormat: "$E",
 			},
 			want: "000",
 		},
@@ -244,7 +244,7 @@ func Test_configFormater_Text(t *testing.T) {
 			},
 			args: args{
 				outFormat: "$a$g$G$p",
-				errFormat: "$e",
+				errFormat: "$E",
 			},
 			want: "test error",
 		},
@@ -256,7 +256,7 @@ func Test_configFormater_Text(t *testing.T) {
 			},
 			args: args{
 				outFormat: "$a/$g/$G/$p",
-				errFormat: "$e",
+				errFormat: "$E",
 			},
 			want: "2/2/0/@every 2s",
 		},
