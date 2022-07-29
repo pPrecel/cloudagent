@@ -10,11 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - 
-        name: Install git 
-        run: |
-          sudo apt update
-          sudo apt install -y git
-      - 
         name: Checkout
         uses: actions/checkout@v2
         with:
@@ -30,4 +25,5 @@ jobs:
         with:
           args: release --rm-dist
         env:
+          GITHUB_REF_NAME: ${{ env.GIT_REF }}
           GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
