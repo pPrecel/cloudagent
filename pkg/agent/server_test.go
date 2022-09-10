@@ -56,8 +56,9 @@ var (
 			},
 			{
 				ObjectMeta: v1.ObjectMeta{
-					Name:      "name2",
-					Namespace: "namespace1",
+					Name:              "name2",
+					Namespace:         "namespace1",
+					CreationTimestamp: v1.NewTime(fixRFC3339Time("2022-09-10T01:08:00Z")),
 				},
 				Status: v1beta1.ShootStatus{
 					Conditions: []v1beta1.Condition{
@@ -112,6 +113,7 @@ var (
 				},
 				Condition:          cloud_agent.Condition_HIBERNATED,
 				LastTransitionTime: timestamppb.New(time.Time{}),
+				CreationTimestamp:  timestamppb.New(time.Time{}),
 			},
 			{
 				Name:      "name2",
@@ -124,15 +126,18 @@ var (
 				},
 				Condition:          cloud_agent.Condition_HEALTHY,
 				LastTransitionTime: timestamppb.New(time.Time{}),
+				CreationTimestamp:  timestamppb.New(time.Time{}),
 			},
 			{
 				Name:               "name2",
 				Namespace:          "namespace1",
 				Condition:          cloud_agent.Condition_UNKNOWN,
 				LastTransitionTime: timestamppb.New(fixRFC3339Time("2022-09-10T10:08:17Z")),
+				CreationTimestamp:  timestamppb.New(fixRFC3339Time("2022-09-10T01:08:00Z")),
 			},
 			{
 				LastTransitionTime: timestamppb.New(time.Time{}),
+				CreationTimestamp:  timestamppb.New(time.Time{}),
 			},
 		},
 	}
@@ -152,6 +157,7 @@ var (
 				},
 				Condition:          cloud_agent.Condition_HIBERNATED,
 				LastTransitionTime: timestamppb.New(time.Time{}),
+				CreationTimestamp:  timestamppb.New(time.Time{}),
 			},
 		},
 	}

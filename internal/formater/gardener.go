@@ -21,7 +21,7 @@ const (
 )
 
 var (
-	gardenerHeaders = []string{"PROJECT", "NAME", "CREATED BY", "CONDITION", "UPDATED", "PROVIDER"}
+	gardenerHeaders = []string{"PROJECT", "NAME", "CREATED BY", "CONDITION", "UPDATED", "CREATED", "PROVIDER"}
 
 	preGardenerDirectives = gardenerDirectiveMap{
 		GardenerTextAllFormat: func(_ *cloud_agent.Shoot) bool {
@@ -100,6 +100,7 @@ func (f *gardenerFormater) Table() ([]string, [][]string) {
 			shoot.Annotations[createdByLabel],
 			shoot.Condition.String(),
 			shoot.LastTransitionTime.AsTime().Local().Format("2006-01-02 15:04:05"),
+			shoot.CreationTimestamp.AsTime().Local().Format("2006-01-02 15:04:05"),
 			gardenerProvider,
 		})
 	}

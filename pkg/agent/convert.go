@@ -70,6 +70,7 @@ func toShoot(shoot *v1beta1.Shoot) *cloud_agent.Shoot {
 		Annotations:        shoot.Annotations,
 		Condition:          cond,
 		LastTransitionTime: lastConditionUpdate(shoot),
+		CreationTimestamp:  timestamppb.New(shoot.ObjectMeta.CreationTimestamp.Time),
 	}
 }
 

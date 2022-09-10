@@ -19,6 +19,7 @@ var (
 				},
 				Condition:          1,
 				LastTransitionTime: timestamppb.New(fixRFC3339Time("2022-09-10T10:08:17Z")),
+				CreationTimestamp:  timestamppb.New(fixRFC3339Time("2022-09-10T10:06:17Z")),
 			},
 			{
 				Name:      "test2",
@@ -28,6 +29,7 @@ var (
 				},
 				Condition:          2,
 				LastTransitionTime: timestamppb.New(fixRFC3339Time("2022-09-10T10:10:10Z")),
+				CreationTimestamp:  timestamppb.New(fixRFC3339Time("2022-09-10T10:08:10Z")),
 			},
 			{
 				Name:      "test3",
@@ -37,6 +39,7 @@ var (
 				},
 				Condition:          3,
 				LastTransitionTime: timestamppb.New(fixRFC3339Time("2022-09-10T10:02:23Z")),
+				CreationTimestamp:  timestamppb.New(fixRFC3339Time("2022-09-10T10:00:23Z")),
 			},
 			{
 				Name: "test4",
@@ -44,6 +47,7 @@ var (
 					createdByLabel: "me2",
 				},
 				LastTransitionTime: timestamppb.New(time.Time{}),
+				CreationTimestamp:  timestamppb.New(time.Time{}),
 			},
 			nil,
 			nil,
@@ -59,19 +63,20 @@ var (
 				},
 				Condition:          1,
 				LastTransitionTime: timestamppb.New(fixRFC3339Time("2022-09-10T10:08:17Z")),
+				CreationTimestamp:  timestamppb.New(fixRFC3339Time("2022-09-10T10:06:17Z")),
 			},
 		},
 	}
 
 	testRows = [][]string{
-		{"", "test", "me", "HEALTHY", fixLocalTime(fixRFC3339Time("2022-09-10T10:08:17Z")), "Gardener"},
-		{"test-namespace", "test2", "me2", "HIBERNATED", fixLocalTime(fixRFC3339Time("2022-09-10T10:10:10Z")), "Gardener"},
-		{"test-namespace", "test3", "me2", "UNKNOWN", fixLocalTime(fixRFC3339Time("2022-09-10T10:02:23Z")), "Gardener"},
-		{"", "test4", "me2", "EMPTY", fixLocalTime(time.Time{}), "Gardener"},
+		{"", "test", "me", "HEALTHY", fixLocalTime(fixRFC3339Time("2022-09-10T10:08:17Z")), fixLocalTime(fixRFC3339Time("2022-09-10T10:06:17Z")), "Gardener"},
+		{"test-namespace", "test2", "me2", "HIBERNATED", fixLocalTime(fixRFC3339Time("2022-09-10T10:10:10Z")), fixLocalTime(fixRFC3339Time("2022-09-10T10:08:10Z")), "Gardener"},
+		{"test-namespace", "test3", "me2", "UNKNOWN", fixLocalTime(fixRFC3339Time("2022-09-10T10:02:23Z")), fixLocalTime(fixRFC3339Time("2022-09-10T10:00:23Z")), "Gardener"},
+		{"", "test4", "me2", "EMPTY", fixLocalTime(time.Time{}), fixLocalTime(time.Time{}), "Gardener"},
 	}
 
 	testFilteredRows = [][]string{
-		{"", "test", "me", "HEALTHY", fixLocalTime(fixRFC3339Time("2022-09-10T10:08:17Z")), "Gardener"},
+		{"", "test", "me", "HEALTHY", fixLocalTime(fixRFC3339Time("2022-09-10T10:08:17Z")), fixLocalTime(fixRFC3339Time("2022-09-10T10:06:17Z")), "Gardener"},
 	}
 )
 

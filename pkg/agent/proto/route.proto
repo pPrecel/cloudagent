@@ -29,6 +29,7 @@ message Shoot {
     map<string,string> annotations = 4;
     Condition condition = 5;
     google.protobuf.Timestamp lastTransitionTime = 6;
+    google.protobuf.Timestamp creationTimestamp = 7;
 }
 
 enum Condition {
