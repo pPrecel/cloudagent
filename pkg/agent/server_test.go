@@ -4,12 +4,14 @@ import (
 	"context"
 	"io"
 	"testing"
+	"time"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -60,10 +62,12 @@ var (
 				Status: v1beta1.ShootStatus{
 					Conditions: []v1beta1.Condition{
 						{
-							Status: v1beta1.ConditionTrue,
+							Status:             v1beta1.ConditionTrue,
+							LastTransitionTime: v1.NewTime(fixRFC3339Time("2022-09-10T10:08:17Z")),
 						},
 						{
-							Status: v1beta1.ConditionFalse,
+							Status:             v1beta1.ConditionFalse,
+							LastTransitionTime: v1.NewTime(fixRFC3339Time("2022-09-10T10:02:00Z")),
 						},
 					},
 				},
@@ -106,7 +110,8 @@ var (
 					"annotation1": "val1",
 					"annotation2": "val2",
 				},
-				Condition: cloud_agent.Condition_HIBERNATED,
+				Condition:          cloud_agent.Condition_HIBERNATED,
+				LastTransitionTime: timestamppb.New(time.Time{}),
 			},
 			{
 				Name:      "name2",
@@ -117,14 +122,18 @@ var (
 				Annotations: map[string]string{
 					"annotation2": "val2",
 				},
-				Condition: cloud_agent.Condition_HEALTHY,
+				Condition:          cloud_agent.Condition_HEALTHY,
+				LastTransitionTime: timestamppb.New(time.Time{}),
 			},
 			{
-				Name:      "name2",
-				Namespace: "namespace1",
-				Condition: cloud_agent.Condition_UNKNOWN,
+				Name:               "name2",
+				Namespace:          "namespace1",
+				Condition:          cloud_agent.Condition_UNKNOWN,
+				LastTransitionTime: timestamppb.New(fixRFC3339Time("2022-09-10T10:08:17Z")),
 			},
-			{},
+			{
+				LastTransitionTime: timestamppb.New(time.Time{}),
+			},
 		},
 	}
 	testAgentShootList2 = &cloud_agent.ShootList{
@@ -141,7 +150,8 @@ var (
 					"annotation1": "val1",
 					"annotation2": "val2",
 				},
-				Condition: cloud_agent.Condition_HIBERNATED,
+				Condition:          cloud_agent.Condition_HIBERNATED,
+				LastTransitionTime: timestamppb.New(time.Time{}),
 			},
 		},
 	}
@@ -311,4 +321,9 @@ func fixShootListCache2() *ServerCache {
 	r.Set(nil, errors.New("test error"))
 
 	return c
+}
+
+func fixRFC3339Time(value string) time.Time {
+	t, _ := time.Parse(time.RFC3339, value)
+	return t
 }
