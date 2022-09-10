@@ -1,6 +1,8 @@
 package agent
 
 import (
+	"time"
+
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -62,12 +64,27 @@ func toShoot(shoot *v1beta1.Shoot) *cloud_agent.Shoot {
 	}
 
 	return &cloud_agent.Shoot{
-		Name:        shoot.Name,
-		Namespace:   shoot.Namespace,
-		Labels:      shoot.Labels,
-		Annotations: shoot.Annotations,
-		Condition:   cond,
+		Name:               shoot.Name,
+		Namespace:          shoot.Namespace,
+		Labels:             shoot.Labels,
+		Annotations:        shoot.Annotations,
+		Condition:          cond,
+		LastTransitionTime: lastConditionUpdate(shoot),
+		CreationTimestamp:  timestamppb.New(shoot.ObjectMeta.CreationTimestamp.Time),
 	}
+}
+
+func lastConditionUpdate(shoot *v1beta1.Shoot) *timestamppb.Timestamp {
+	last := time.Time{}
+	for i := range shoot.Status.Conditions {
+		cond := shoot.Status.Conditions[i]
+
+		if cond.LastTransitionTime.Time.After(last) {
+			last = cond.LastTransitionTime.Time
+		}
+	}
+
+	return timestamppb.New(last)
 }
 
 func isConditionUnknown(shoot *v1beta1.Shoot) bool {

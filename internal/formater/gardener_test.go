@@ -2,9 +2,11 @@ package formater
 
 import (
 	"testing"
+	"time"
 
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var (
@@ -15,7 +17,9 @@ var (
 				Annotations: map[string]string{
 					createdByLabel: "me",
 				},
-				Condition: 1,
+				Condition:          1,
+				LastTransitionTime: timestamppb.New(fixRFC3339Time("2022-09-10T10:08:17Z")),
+				CreationTimestamp:  timestamppb.New(fixRFC3339Time("2022-09-10T10:06:17Z")),
 			},
 			{
 				Name:      "test2",
@@ -23,7 +27,9 @@ var (
 				Annotations: map[string]string{
 					createdByLabel: "me2",
 				},
-				Condition: 2,
+				Condition:          2,
+				LastTransitionTime: timestamppb.New(fixRFC3339Time("2022-09-10T10:10:10Z")),
+				CreationTimestamp:  timestamppb.New(fixRFC3339Time("2022-09-10T10:08:10Z")),
 			},
 			{
 				Name:      "test3",
@@ -31,13 +37,17 @@ var (
 				Annotations: map[string]string{
 					createdByLabel: "me2",
 				},
-				Condition: 3,
+				Condition:          3,
+				LastTransitionTime: timestamppb.New(fixRFC3339Time("2022-09-10T10:02:23Z")),
+				CreationTimestamp:  timestamppb.New(fixRFC3339Time("2022-09-10T10:00:23Z")),
 			},
 			{
 				Name: "test4",
 				Annotations: map[string]string{
 					createdByLabel: "me2",
 				},
+				LastTransitionTime: timestamppb.New(time.Time{}),
+				CreationTimestamp:  timestamppb.New(time.Time{}),
 			},
 			nil,
 			nil,
@@ -51,20 +61,22 @@ var (
 				Annotations: map[string]string{
 					createdByLabel: "me",
 				},
-				Condition: 1,
+				Condition:          1,
+				LastTransitionTime: timestamppb.New(fixRFC3339Time("2022-09-10T10:08:17Z")),
+				CreationTimestamp:  timestamppb.New(fixRFC3339Time("2022-09-10T10:06:17Z")),
 			},
 		},
 	}
 
 	testRows = [][]string{
-		{"", "test", "me", "HEALTHY", "Gardener"},
-		{"test-namespace", "test2", "me2", "HIBERNATED", "Gardener"},
-		{"test-namespace", "test3", "me2", "UNKNOWN", "Gardener"},
-		{"", "test4", "me2", "EMPTY", "Gardener"},
+		{"", "test", "me", "HEALTHY", fixLocalTime(fixRFC3339Time("2022-09-10T10:08:17Z")), fixLocalTime(fixRFC3339Time("2022-09-10T10:06:17Z")), "Gardener"},
+		{"test-namespace", "test2", "me2", "HIBERNATED", fixLocalTime(fixRFC3339Time("2022-09-10T10:10:10Z")), fixLocalTime(fixRFC3339Time("2022-09-10T10:08:10Z")), "Gardener"},
+		{"test-namespace", "test3", "me2", "UNKNOWN", fixLocalTime(fixRFC3339Time("2022-09-10T10:02:23Z")), fixLocalTime(fixRFC3339Time("2022-09-10T10:00:23Z")), "Gardener"},
+		{"", "test4", "me2", "EMPTY", fixLocalTime(time.Time{}), fixLocalTime(time.Time{}), "Gardener"},
 	}
 
 	testFilteredRows = [][]string{
-		{"", "test", "me", "HEALTHY", "Gardener"},
+		{"", "test", "me", "HEALTHY", fixLocalTime(fixRFC3339Time("2022-09-10T10:08:17Z")), fixLocalTime(fixRFC3339Time("2022-09-10T10:06:17Z")), "Gardener"},
 	}
 )
 
@@ -252,4 +264,13 @@ func Test_state_Text(t *testing.T) {
 			assert.Equal(t, tt.want, s.Text(tt.args.outFormat, tt.args.errFormat))
 		})
 	}
+}
+
+func fixRFC3339Time(value string) time.Time {
+	t, _ := time.Parse(time.RFC3339, value)
+	return t.Local()
+}
+
+func fixLocalTime(value time.Time) string {
+	return value.Local().Format("2006-01-02 15:04:05")
 }
