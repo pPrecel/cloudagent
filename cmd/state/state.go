@@ -6,6 +6,7 @@ import (
 
 	"github.com/pPrecel/cloudagent/internal/formater"
 	"github.com/pPrecel/cloudagent/internal/output"
+	"github.com/pPrecel/cloudagent/internal/timestamp"
 	"github.com/pPrecel/cloudagent/pkg/agent"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
 	"github.com/pkg/errors"
@@ -38,6 +39,13 @@ func NewCmd(o *options) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&o.createdBy, "created-by", "c", "", "Show clusters created by specific person.")
+	cmd.Flags().StringVar(&o.project, "project", "", "")
+	cmd.Flags().StringVar(&o.condition, "condition", "", "")
+	cmd.Flags().StringVarP(&o.labelSelector, "selector", "l", "", "")
+	cmd.Flags().StringVar(&o.updatedAfter, "updated-after", "", "")
+	cmd.Flags().StringVar(&o.updatedBefore, "updated-before", "", "")
+	cmd.Flags().StringVar(&o.createdAfter, "created-after", "", "")
+	cmd.Flags().StringVar(&o.createdBefore, "created-before", "", "")
 	cmd.Flags().VarP(output.NewFlag(&o.outFormat, "table", "$r/$h/$x/$a", "-/-/-/-"), "output", "o", `Provides format for the output information. 
 	
 For the 'text' output format you can specifie two more informations by spliting them using '='. The first one would be used as output format and second as error format.
@@ -67,8 +75,43 @@ func run(o *options) error {
 		return errors.Wrap(err, "cloudagent internal error")
 	}
 
+	updatedAfter := time.Time{}
+	if o.updatedAfter != "" {
+		if updatedAfter, err = timestamp.Parse(o.updatedAfter, true); err != nil {
+			return err
+		}
+	}
+
+	updatedBefore := time.Time{}
+	if o.updatedBefore != "" {
+		if updatedBefore, err = timestamp.Parse(o.updatedBefore, false); err != nil {
+			return err
+		}
+	}
+
+	createdAfter := time.Time{}
+	if o.createdAfter != "" {
+		if createdAfter, err = timestamp.Parse(o.createdAfter, true); err != nil {
+			return err
+		}
+	}
+
+	createdBefore := time.Time{}
+	if o.createdBefore != "" {
+		if createdBefore, err = timestamp.Parse(o.createdBefore, false); err != nil {
+			return err
+		}
+	}
+
 	f := formater.NewGardener(list.ShootList, formater.Filters{
-		CreatedBy: o.createdBy,
+		CreatedBy:     o.createdBy,
+		Project:       o.project,
+		Condition:     o.condition,
+		LabelSelector: o.labelSelector,
+		UpdatedAfter:  updatedAfter,
+		UpdatedBefore: updatedBefore,
+		CreatedAfter:  createdAfter,
+		CreatedBefore: createdBefore,
 	})
 
 	// print warning

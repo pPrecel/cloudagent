@@ -3,9 +3,11 @@ package formater
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pPrecel/cloudagent/internal/output"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 const (
@@ -150,28 +152,112 @@ func (d gardenerDirectiveMap) run(s *cloud_agent.ShootList, m map[string]int) ma
 }
 
 type Filters struct {
-	CreatedBy string
+	CreatedBy     string
+	Project       string
+	Condition     string
+	LabelSelector string
+	UpdatedAfter  time.Time
+	UpdatedBefore time.Time
+	CreatedAfter  time.Time
+	CreatedBefore time.Time
 }
 
 func (f *Filters) filter(s *cloud_agent.ShootList) *cloud_agent.ShootList {
 	if f.CreatedBy != "" {
-		s = shootsCreatedBy(s, f.CreatedBy)
+		s = filterByCreatedBy(s, f.CreatedBy)
+	}
+	if f.Project != "" {
+		s = project(s, f.Project)
+	}
+	if f.Condition != "" {
+		s = filterByCondition(s, f.Condition)
+	}
+	if f.LabelSelector != "" {
+		s = filterByLabelSelector(s, f.LabelSelector)
+	}
+	if !f.UpdatedAfter.IsZero() {
+		s = filterByUpdatedAfter(s, f.UpdatedAfter)
+	}
+	if !f.UpdatedBefore.IsZero() {
+		s = filterByUpdatedBefore(s, f.UpdatedBefore)
+	}
+	if !f.CreatedAfter.IsZero() {
+		s = filterByCreatedAfter(s, f.CreatedAfter)
+	}
+	if !f.CreatedBefore.IsZero() {
+		s = filterByCreatedBefore(s, f.CreatedBefore)
 	}
 	return s
 }
 
-func shootsCreatedBy(s *cloud_agent.ShootList, c string) *cloud_agent.ShootList {
-	list := &cloud_agent.ShootList{}
+func filterByCreatedAfter(s *cloud_agent.ShootList, v time.Time) *cloud_agent.ShootList {
+	return filterBy(s, func(shoot *cloud_agent.Shoot) bool {
+		return shoot.CreationTimestamp.AsTime().After(v)
+	})
+}
 
-	for i := range s.Shoots {
-		if s.Shoots[i] == nil {
+func filterByCreatedBefore(s *cloud_agent.ShootList, v time.Time) *cloud_agent.ShootList {
+	return filterBy(s, func(shoot *cloud_agent.Shoot) bool {
+		return shoot.CreationTimestamp.AsTime().Before(v)
+	})
+}
+
+func filterByUpdatedAfter(s *cloud_agent.ShootList, v time.Time) *cloud_agent.ShootList {
+	return filterBy(s, func(shoot *cloud_agent.Shoot) bool {
+		return shoot.LastTransitionTime.AsTime().After(v)
+	})
+}
+
+func filterByUpdatedBefore(s *cloud_agent.ShootList, v time.Time) *cloud_agent.ShootList {
+	return filterBy(s, func(shoot *cloud_agent.Shoot) bool {
+		return shoot.LastTransitionTime.AsTime().Before(v)
+	})
+}
+
+func filterByLabelSelector(s *cloud_agent.ShootList, v string) *cloud_agent.ShootList {
+	return filterBy(s, func(shoot *cloud_agent.Shoot) bool {
+		selector, err := labels.Parse(v)
+		if err != nil {
+			return false
+		}
+
+		return selector.Matches(labels.Set(shoot.Labels))
+	})
+}
+
+func filterByCondition(s *cloud_agent.ShootList, v string) *cloud_agent.ShootList {
+	return filterBy(s, func(shoot *cloud_agent.Shoot) bool {
+		return shoot.Condition.String() == v
+	})
+}
+
+func project(s *cloud_agent.ShootList, v string) *cloud_agent.ShootList {
+	return filterBy(s, func(shoot *cloud_agent.Shoot) bool {
+		return shoot.Namespace == v
+	})
+}
+
+func filterByCreatedBy(s *cloud_agent.ShootList, v string) *cloud_agent.ShootList {
+	return filterBy(s, func(shoot *cloud_agent.Shoot) bool {
+		return shoot.Annotations[createdByLabel] == v
+	})
+}
+
+type statement func(s *cloud_agent.Shoot) bool
+
+func filterBy(list *cloud_agent.ShootList, state statement) *cloud_agent.ShootList {
+	l := &cloud_agent.ShootList{}
+
+	for i := range list.Shoots {
+		s := list.Shoots[i]
+		if s == nil {
 			continue
 		}
 
-		if s.Shoots[i].Annotations[createdByLabel] == c {
-			list.Shoots = append(list.Shoots, s.Shoots[i])
+		if state(s) {
+			l.Shoots = append(l.Shoots, s)
 		}
 	}
 
-	return list
+	return l
 }
