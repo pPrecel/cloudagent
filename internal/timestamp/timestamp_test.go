@@ -11,13 +11,13 @@ import (
 
 func TestParse(t *testing.T) {
 	y, m, d := time.Now().Date()
-	t1, err := time.Parse("2006/01/02 15:04:05", "2006/01/02 00:00:00")
+	t1, err := time.Parse("2006-01-02 15:04:05", "2006-01-02 00:00:00")
 	require.NoError(t, err)
-	t1late, err := time.Parse("2006/01/02 15:04:05", "2006/01/02 23:59:59")
+	t1late, err := time.Parse("2006-01-02 15:04:05", "2006-01-02 23:59:59")
 	require.NoError(t, err)
-	t2Value := fmt.Sprintf("%04d/%02d/%02d %s", y, m, d, "12:02:46")
-	t2ValueReverted := fmt.Sprintf("%s %04d/%02d/%02d", "12:02:46", y, m, d)
-	t2, err := time.Parse("2006/01/02 15:04:05", t2Value)
+	t2Value := fmt.Sprintf("%04d-%02d-%02d %s", y, m, d, "12:02:46")
+	t2ValueReverted := fmt.Sprintf("%s %04d-%02d-%02d", "12:02:46", y, m, d)
+	t2, err := time.Parse("2006-01-02 15:04:05", t2Value)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -33,13 +33,13 @@ func TestParse(t *testing.T) {
 		},
 		{
 			name:      "date",
-			timestamp: "2006/01/02",
+			timestamp: "2006-01-02",
 			want:      t1,
 			wantErr:   false,
 		},
 		{
 			name:      "late date",
-			timestamp: "2006/01/02",
+			timestamp: "2006-01-02",
 			want:      t1late,
 			wantLate:  true,
 			wantErr:   false,

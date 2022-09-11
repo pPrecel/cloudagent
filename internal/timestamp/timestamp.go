@@ -18,19 +18,19 @@ func Parse(timestamp string, late bool) (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	return time.Parse("2006/01/02 15:04:05", t)
+	return time.Parse("2006-01-02 15:04:05", t)
 }
 
 func formatTimestamp(timestamp string, late bool) (string, error) {
 	t := []byte(timestamp)
 	for i := range t {
-		if t[i] != ':' && t[i] != '/' && t[i] != ' ' {
+		if t[i] != ':' && t[i] != '-' && t[i] != ' ' {
 			t[i] = 'd'
 		}
 	}
 
 	switch string(t) {
-	case "dddd/dd/dd":
+	case "dddd-dd-dd":
 		t := "00:00:00"
 		if late {
 			t = "23:59:59"
@@ -38,10 +38,10 @@ func formatTimestamp(timestamp string, late bool) (string, error) {
 		return fmt.Sprintf("%s %s", timestamp, t), nil
 	case "dd:dd:dd":
 		y, m, d := time.Now().Date()
-		return fmt.Sprintf("%04d/%02d/%02d %s", y, m, d, timestamp), nil
-	case "dddd/dd/dd dd:dd:dd":
+		return fmt.Sprintf("%04d-%02d-%02d %s", y, m, d, timestamp), nil
+	case "dddd-dd-dd dd:dd:dd":
 		return timestamp, nil
-	case "dd:dd:dd dddd/dd/dd":
+	case "dd:dd:dd dddd-dd-dd":
 		s := strings.Split(timestamp, " ")
 		return fmt.Sprintf("%s %s", s[1], s[0]), nil
 	}
