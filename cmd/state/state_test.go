@@ -90,6 +90,12 @@ func Test_run(t *testing.T) {
 		o.socketAddress = socketAddress
 		o.socketNetwork = socketNetwork
 		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$r/$h/$u/$a", "-/-/-/-")
+		o.project = "test"
+		o.condition = "test"
+		o.createdAfter = "2022-09-11"
+		o.createdBefore = "2022-09-11"
+		o.updatedAfter = "2022-09-11"
+		o.updatedBefore = "2022-09-11"
 
 		r.Set(&v1beta1.ShootList{
 			Items: []v1beta1.Shoot{
@@ -99,6 +105,118 @@ func Test_run(t *testing.T) {
 
 		err = cmd.RunE(cmd, []string{})
 		assert.NoError(t, err)
+	})
+
+	t.Run("parse createdAfter error", func(t *testing.T) {
+		c := &agent.ServerCache{
+			GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+		}
+		stopFn, err := fixServer(l, c)
+		assert.NoError(t, err)
+		defer stopFn()
+
+		o := &options{
+			writer: io.Discard,
+			Options: &command.Options{
+				Logger:  l.Logger,
+				Context: context.Background(),
+			},
+		}
+		cmd := NewCmd(o)
+		o.createdBy = "owner"
+		o.socketAddress = socketAddress
+		o.socketNetwork = socketNetwork
+		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$r/$h/$u/$a", "-/-/-/-")
+		o.project = "test"
+		o.condition = "test"
+		o.createdAfter = "wrong time"
+
+		err = cmd.RunE(cmd, []string{})
+		assert.Error(t, err)
+	})
+
+	t.Run("parse createdBefore error", func(t *testing.T) {
+		c := &agent.ServerCache{
+			GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+		}
+		stopFn, err := fixServer(l, c)
+		assert.NoError(t, err)
+		defer stopFn()
+
+		o := &options{
+			writer: io.Discard,
+			Options: &command.Options{
+				Logger:  l.Logger,
+				Context: context.Background(),
+			},
+		}
+		cmd := NewCmd(o)
+		o.createdBy = "owner"
+		o.socketAddress = socketAddress
+		o.socketNetwork = socketNetwork
+		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$r/$h/$u/$a", "-/-/-/-")
+		o.project = "test"
+		o.condition = "test"
+		o.createdBefore = "wrong time"
+
+		err = cmd.RunE(cmd, []string{})
+		assert.Error(t, err)
+	})
+
+	t.Run("parse updatedAfter error", func(t *testing.T) {
+		c := &agent.ServerCache{
+			GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+		}
+		stopFn, err := fixServer(l, c)
+		assert.NoError(t, err)
+		defer stopFn()
+
+		o := &options{
+			writer: io.Discard,
+			Options: &command.Options{
+				Logger:  l.Logger,
+				Context: context.Background(),
+			},
+		}
+		cmd := NewCmd(o)
+		o.createdBy = "owner"
+		o.socketAddress = socketAddress
+		o.socketNetwork = socketNetwork
+		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$r/$h/$u/$a", "-/-/-/-")
+		o.project = "test"
+		o.condition = "test"
+		o.updatedAfter = "wrong time"
+
+		err = cmd.RunE(cmd, []string{})
+		assert.Error(t, err)
+	})
+
+	t.Run("parse updatedBefore error", func(t *testing.T) {
+		c := &agent.ServerCache{
+			GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+		}
+		stopFn, err := fixServer(l, c)
+		assert.NoError(t, err)
+		defer stopFn()
+
+		o := &options{
+			writer: io.Discard,
+			Options: &command.Options{
+				Logger:  l.Logger,
+				Context: context.Background(),
+			},
+		}
+		cmd := NewCmd(o)
+		o.createdBy = "owner"
+		o.socketAddress = socketAddress
+		o.socketNetwork = socketNetwork
+		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$r/$h/$u/$a", "-/-/-/-")
+		o.project = "test"
+		o.condition = "test"
+		o.updatedBefore = "wrong time"
+
+		err = cmd.RunE(cmd, []string{})
+		assert.Error(t, err)
 	})
 
 	t.Run("client error", func(t *testing.T) {

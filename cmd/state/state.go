@@ -39,13 +39,13 @@ func NewCmd(o *options) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&o.createdBy, "created-by", "c", "", "Show clusters created by specific person.")
-	cmd.Flags().StringVar(&o.project, "project", "", "")
-	cmd.Flags().StringVar(&o.condition, "condition", "", "")
-	cmd.Flags().StringVarP(&o.labelSelector, "selector", "l", "", "")
-	cmd.Flags().StringVar(&o.updatedAfter, "updated-after", "", "")
-	cmd.Flags().StringVar(&o.updatedBefore, "updated-before", "", "")
-	cmd.Flags().StringVar(&o.createdAfter, "created-after", "", "")
-	cmd.Flags().StringVar(&o.createdBefore, "created-before", "", "")
+	cmd.Flags().StringVar(&o.project, "project", "", "Show clusters from specific project.")
+	cmd.Flags().StringVar(&o.condition, "condition", "", "Show clusters with specific condition.")
+	cmd.Flags().StringVarP(&o.labelSelector, "selector", "l", "", "Show clusters based on label selector. Supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)")
+	cmd.Flags().StringVar(&o.updatedAfter, "updated-after", "", "Show clusters updated after specific time.")
+	cmd.Flags().StringVar(&o.updatedBefore, "updated-before", "", "Show clusters updated before specific time.")
+	cmd.Flags().StringVar(&o.createdAfter, "created-after", "", "Show clusters created after specific time.")
+	cmd.Flags().StringVar(&o.createdBefore, "created-before", "", "Show clusters created before specific time.")
 	cmd.Flags().VarP(output.NewFlag(&o.outFormat, "table", "$r/$h/$x/$a", "-/-/-/-"), "output", "o", `Provides format for the output information. 
 	
 For the 'text' output format you can specifie two more informations by spliting them using '='. The first one would be used as output format and second as error format.
