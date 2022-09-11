@@ -1,6 +1,7 @@
 package formater
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -262,6 +263,200 @@ func Test_state_Text(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := NewGardener(tt.fields.shoots, tt.fields.filters)
 			assert.Equal(t, tt.want, s.Text(tt.args.outFormat, tt.args.errFormat))
+		})
+	}
+}
+
+func TestFilters_filter(t *testing.T) {
+	type fields struct {
+		CreatedBy     string
+		Project       string
+		Condition     string
+		LabelSelector string
+		UpdatedAfter  time.Time
+		UpdatedBefore time.Time
+		CreatedAfter  time.Time
+		CreatedBefore time.Time
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		arg    *cloud_agent.ShootList
+		want   *cloud_agent.ShootList
+	}{
+		{
+			name:   "zero filters",
+			fields: fields{},
+			arg:    testShoots,
+			want:   testShoots,
+		},
+		{
+			name: "filter by createdBy",
+			fields: fields{
+				CreatedBy: "me2",
+			},
+			arg: &cloud_agent.ShootList{
+				Shoots: []*cloud_agent.Shoot{
+					{
+						Annotations: map[string]string{
+							createdByLabel: "me2",
+						},
+					},
+					{
+						Annotations: map[string]string{
+							createdByLabel: "me3",
+						},
+					},
+				},
+			},
+			want: &cloud_agent.ShootList{
+				Shoots: []*cloud_agent.Shoot{
+					{
+						Annotations: map[string]string{
+							createdByLabel: "me2",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "filter by project",
+			fields: fields{
+				Project: "test-project",
+			},
+			arg: &cloud_agent.ShootList{
+				Shoots: []*cloud_agent.Shoot{
+					{
+						Namespace: "test",
+					},
+					{
+						Namespace: "test-project",
+					},
+				},
+			},
+			want: &cloud_agent.ShootList{
+				Shoots: []*cloud_agent.Shoot{
+					{
+						Namespace: "test-project",
+					},
+				},
+			},
+		},
+		{
+			name: "filter by condition",
+			fields: fields{
+				Condition: cloud_agent.Condition_HIBERNATED.String(),
+			},
+			arg: &cloud_agent.ShootList{
+				Shoots: []*cloud_agent.Shoot{
+					{
+						Condition: 2,
+					},
+					{
+						Condition: 1,
+					},
+				},
+			},
+			want: &cloud_agent.ShootList{
+				Shoots: []*cloud_agent.Shoot{
+					{
+						Condition: 2,
+					},
+				},
+			},
+		},
+		{
+			name: "filter by labelSelector",
+			fields: fields{
+				LabelSelector: "name==test",
+			},
+			arg: &cloud_agent.ShootList{
+				Shoots: []*cloud_agent.Shoot{
+					{
+						Labels: map[string]string{
+							"name": "any",
+						},
+					},
+					{
+						Labels: map[string]string{
+							"name": "test",
+						},
+					},
+				},
+			},
+			want: &cloud_agent.ShootList{
+				Shoots: []*cloud_agent.Shoot{
+					{
+						Labels: map[string]string{
+							"name": "test",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "wrong labelSelector",
+			fields: fields{
+				LabelSelector: "name    test",
+			},
+			arg: &cloud_agent.ShootList{
+				Shoots: []*cloud_agent.Shoot{
+					{
+						Labels: map[string]string{
+							"name": "any",
+						},
+					},
+					{
+						Labels: map[string]string{
+							"name": "test",
+						},
+					},
+				},
+			},
+			want: &cloud_agent.ShootList{},
+		},
+		{
+			name: "filter by update timestamp",
+			fields: fields{
+				UpdatedAfter:  fixRFC3339Time("2022-09-10T10:07:17Z"),
+				UpdatedBefore: fixRFC3339Time("2022-09-10T10:09:17Z"),
+			},
+			arg: testShoots,
+			want: &cloud_agent.ShootList{
+				Shoots: []*cloud_agent.Shoot{
+					testShoots.Shoots[0],
+				},
+			},
+		},
+		{
+			name: "filter by create timestamp",
+			fields: fields{
+				CreatedAfter:  fixRFC3339Time("2022-09-10T10:05:17Z"),
+				CreatedBefore: fixRFC3339Time("2022-09-10T10:07:17Z"),
+			},
+			arg: testShoots,
+			want: &cloud_agent.ShootList{
+				Shoots: []*cloud_agent.Shoot{
+					testShoots.Shoots[0],
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := &Filters{
+				CreatedBy:     tt.fields.CreatedBy,
+				Project:       tt.fields.Project,
+				Condition:     tt.fields.Condition,
+				LabelSelector: tt.fields.LabelSelector,
+				UpdatedAfter:  tt.fields.UpdatedAfter,
+				UpdatedBefore: tt.fields.UpdatedBefore,
+				CreatedAfter:  tt.fields.CreatedAfter,
+				CreatedBefore: tt.fields.CreatedBefore,
+			}
+			if got := f.filter(tt.arg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Filters.filter() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
