@@ -13,9 +13,16 @@ import (
 type options struct {
 	*command.Options
 
-	createdBy string
-	outFormat output.Flag
-	timeout   time.Duration
+	createdBy     string
+	project       string
+	condition     string
+	labelSelector string
+	updatedAfter  string
+	updatedBefore string
+	createdAfter  string
+	createdBefore string
+	outFormat     output.Flag
+	timeout       time.Duration
 
 	socketAddress string
 	socketNetwork string
