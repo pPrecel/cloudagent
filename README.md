@@ -2,7 +2,7 @@
 
 [![license](https://img.shields.io/badge/License-MIT-brightgreen.svg?style=for-the-badge)](https://github.com/pPrecel/cloudagent/blob/main/LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/pPrecel/cloudagent?style=for-the-badge)](https://goreportcard.com/report/github.com/pPrecel/cloudagent)
-[![build](https://img.shields.io/github/workflow/status/pPrecel/cloudagent/build?style=for-the-badge)](https://github.com/pPrecel/cloudagent/actions/workflows/build.yml)
+[![build](https://img.shields.io/github/actions/workflow/status/pPrecel/cloudagent/tests-build.yml?style=for-the-badge)](https://github.com/pPrecel/cloudagent/actions/workflows/build.yml)
 [![Coverage](https://img.shields.io/coveralls/github/pPrecel/cloudagent?style=for-the-badge)](https://coveralls.io/github/pPrecel/cloudagent)
 
 The simple and easy-to-use program is designed to watch user activity and possible orphan clusters for Cloud Providers:
