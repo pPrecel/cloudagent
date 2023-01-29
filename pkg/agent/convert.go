@@ -8,17 +8,20 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func toGardenerResponse(serverCache *ServerCache) *cloud_agent.GardenerResponse {
+func toGardenerResponse(serverCache ResourceGetter) *cloud_agent.GardenerResponse {
 	err := ""
-	if serverCache.GeneralError != nil {
-		err = serverCache.GeneralError.Error()
+	if serverCache.GetGeneralError() != nil {
+		err = serverCache.GetGeneralError().Error()
 	}
 
-	resources := serverCache.GardenerCache.Resources()
 	shootList := map[string]*cloud_agent.ShootList{}
-	for key := range resources {
-		r := resources[key]
-		shootList[key] = toShootList(r)
+	gardenerCache := serverCache.GetGardenerCache()
+	if gardenerCache != nil {
+		resources := gardenerCache.Resources()
+		for key := range resources {
+			r := resources[key]
+			shootList[key] = toShootList(r)
+		}
 	}
 
 	return &cloud_agent.GardenerResponse{

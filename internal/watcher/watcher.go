@@ -2,9 +2,10 @@ package watcher
 
 import (
 	"context"
+	"fmt"
+	"time"
 
-	"github.com/pPrecel/cloudagent/internal/gardener"
-	"github.com/pPrecel/cloudagent/internal/system"
+	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloudagent/pkg/agent"
 	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/sirupsen/logrus"
@@ -13,75 +14,61 @@ import (
 type Options struct {
 	Context    context.Context
 	Logger     *logrus.Entry
-	Cache      *agent.ServerCache
 	ConfigPath string
 }
 
-type watcher struct {
-	getConfig    func(string) (*config.Config, error)
-	notifyChange func(string) (*system.Notifier, error)
+func NewForConfig(o *Options) (agent.ResourceGetter, error) {
+	return newForConfig(o, config.Read)
 }
 
-func NewWatcher() *watcher {
-	return &watcher{
-		getConfig:    config.Read,
-		notifyChange: system.NotifyChange,
-	}
-}
-
-func (w *watcher) Start(o *Options) error {
-	o.Logger.Debug("starting watcher")
-	watcher, err := w.newWatcher(o)
+func newForConfig(o *Options, getConfig func(string) (*config.Config, error)) (agent.ResourceGetter, error) {
+	cfg, err := getConfig(o.ConfigPath)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("failed to read config: %s", err)
 	}
-	defer watcher.Stop()
-	watcher.Start()
 
-	o.Logger.Info("starting config notifier")
-	n, err := w.notifyChange(o.ConfigPath)
-	if err != nil {
-		return err
-	}
-	defer n.Stop()
+	if cfg.PersistentSpec == "on-demand" {
+		return newOnDemand(o), nil
+	} else {
+		cache := &agent.ServerCache{
+			GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+		}
 
-	select {
-	case err := <-n.Errors:
-		return err
-	case <-n.IsMotified:
-		return nil
+		go setupWatcher(cache, o)
+
+		return cache, nil
 	}
 }
 
-func (w *watcher) newWatcher(o *Options) (*agent.Watcher, error) {
-	o.Logger.Infof("reading config from path: '%s'", o.ConfigPath)
-	config, err := w.getConfig(o.ConfigPath)
-	if err != nil {
-		return nil, err
+func setupWatcher(cache *agent.ServerCache, o *Options) {
+	for {
+
+		select {
+		case <-o.Context.Done():
+			o.Logger.Warn("watcher context done. Exiting")
+			return
+		default:
+			cache.GeneralError = nil
+			startWatcher(cache, o)
+
+			// wait 1sec to avoid CPU throttling
+			time.Sleep(time.Second * 1)
+		}
+	}
+}
+
+func startWatcher(cache *agent.ServerCache, o *Options) {
+	if err := newCached(cache, &Options{
+		Context:    o.Context,
+		Logger:     o.Logger,
+		ConfigPath: o.ConfigPath,
+	}).start(); err != nil {
+		o.Logger.Warn(err)
+		cache.GeneralError = err
 	}
 
-	o.Logger.Infof("starting state watcher with spec: '%s'", config.PersistentSpec)
+	o.Logger.Info("configuration midyfication detected")
 
-	funcs := []agent.WatchFn{}
-	for i := range config.GardenerProjects {
-		p := config.GardenerProjects[i]
-		r := o.Cache.GardenerCache.Register(p.Namespace)
-
-		o.Logger.Debugf("creating watcher func for namespace: '%s'", p.Namespace)
-		l := o.Logger.WithFields(
-			logrus.Fields{
-				"provider": "gardener",
-				"project":  p.Namespace,
-			},
-		)
-		funcs = append(funcs,
-			gardener.NewWatchFunc(l, r, p.Namespace, p.KubeconfigPath),
-		)
-	}
-
-	return agent.NewWatcher(agent.WatcherOptions{
-		Spec:    config.PersistentSpec,
-		Context: o.Context,
-		Logger:  o.Logger,
-	}, funcs...)
+	o.Logger.Info("cleaning up cache")
+	cache.GardenerCache.Clean()
 }

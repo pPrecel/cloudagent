@@ -12,6 +12,14 @@ type ServerCache struct {
 	GeneralError  error
 }
 
+func (sc *ServerCache) GetGardenerCache() Cache[*v1beta1.ShootList] {
+	return sc.GardenerCache
+}
+
+func (sc *ServerCache) GetGeneralError() error {
+	return sc.GeneralError
+}
+
 //go:generate mockery --name=RegisteredResource --output=automock --outpkg=automock
 type RegisteredResource[T any] interface {
 	Set(T, error)

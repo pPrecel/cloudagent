@@ -4,6 +4,7 @@ import (
 	"context"
 	"math"
 
+	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -12,21 +13,26 @@ import (
 
 var _ cloud_agent.AgentServer = &server{}
 
+type ResourceGetter interface {
+	GetGardenerCache() Cache[*v1beta1.ShootList]
+	GetGeneralError() error
+}
+
 type ServerOption struct {
-	Cache  *ServerCache
-	Logger *logrus.Entry
+	ResourceGetter ResourceGetter
+	Logger         *logrus.Entry
 }
 
 type server struct {
 	cloud_agent.UnimplementedAgentServer
-	cache  *ServerCache
-	logger *logrus.Entry
+	resourceGetter ResourceGetter
+	logger         *logrus.Entry
 }
 
 func NewServer(opts *ServerOption) cloud_agent.AgentServer {
 	return &server{
-		logger: opts.Logger,
-		cache:  opts.Cache,
+		logger:         opts.Logger,
+		resourceGetter: opts.ResourceGetter,
 	}
 }
 
@@ -34,14 +40,13 @@ func (s *server) GardenerShoots(ctx context.Context, _ *cloud_agent.Empty) (*clo
 	logger := s.logger.WithField("request-id", rand.Intn(math.MaxInt))
 	logger.Debug("handling request")
 
-	if s.cache == nil ||
-		(s.cache != nil && s.cache.GardenerCache == nil) {
+	if s.resourceGetter == nil {
 		errMessage := "can't get latest shoots data"
 		logger.Debug(errMessage)
 		return nil, errors.New(errMessage)
 	}
 
-	resp := toGardenerResponse(s.cache)
+	resp := toGardenerResponse(s.resourceGetter)
 
 	logger.Debugf("returning list of '%d' elements, with err: '%s'", len(resp.ShootList), resp.GeneralError)
 

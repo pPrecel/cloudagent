@@ -170,7 +170,7 @@ func Test_server_GardenerShoots(t *testing.T) {
 	l.Logger.Out = io.Discard
 
 	type fields struct {
-		gardenerCache *ServerCache
+		gardenerCache ResourceGetter
 		logger        *logrus.Entry
 	}
 	tests := []struct {
@@ -194,7 +194,7 @@ func Test_server_GardenerShoots(t *testing.T) {
 				},
 				logger: l,
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "state list",
@@ -261,8 +261,8 @@ func Test_server_GardenerShoots(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := NewServer(&ServerOption{
-				Cache:  tt.fields.gardenerCache,
-				Logger: tt.fields.logger,
+				ResourceGetter: tt.fields.gardenerCache,
+				Logger:         tt.fields.logger,
 			})
 			got, err := s.GardenerShoots(context.Background(), &cloud_agent.Empty{})
 			if (err != nil) != tt.wantErr {

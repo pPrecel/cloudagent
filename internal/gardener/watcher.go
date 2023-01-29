@@ -27,7 +27,7 @@ func newWatchFunc(l *logrus.Entry, r agent.RegisteredResource[*v1beta1.ShootList
 	return func(context context.Context) {
 		l.Debug("watching for resources")
 		if c == nil || err != nil {
-			l.Info("building new gardener client")
+			l.Debug("building new gardener client")
 			c, err = clientBuilder()
 			if err != nil {
 				l.Errorf("when creating gardener client: %s", err.Error())
