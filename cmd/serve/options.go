@@ -11,7 +11,6 @@ type options struct {
 
 	configPath string
 
-	onDemand      bool
 	socketAddress string
 	socketNetwork string
 }

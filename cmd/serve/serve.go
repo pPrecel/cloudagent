@@ -28,7 +28,6 @@ func NewCmd(o *options) *cobra.Command {
 
 	cmd.Flags().StringVarP(&o.configPath, "config-path", "c", config.ConfigPath, "Provides path to the config file.")
 	cmd.Flags().StringVar(&o.socketAddress, "socket-path", agent.Address, "Provides path to the socket file.")
-	cmd.Flags().BoolVar(&o.onDemand, "on-demand", false, "If true cloudagent will fetch data from cloud providers on demand.")
 
 	return cmd
 }
