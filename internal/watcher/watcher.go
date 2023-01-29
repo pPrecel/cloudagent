@@ -3,6 +3,7 @@ package watcher
 import (
 	"context"
 
+	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloudagent/internal/gardener"
 	"github.com/pPrecel/cloudagent/internal/system"
 	"github.com/pPrecel/cloudagent/pkg/agent"
@@ -22,7 +23,7 @@ type watcher struct {
 	notifyChange func(string) (*system.Notifier, error)
 }
 
-func NewWatcher() *watcher {
+func New() *watcher {
 	return &watcher{
 		getConfig:    config.Read,
 		notifyChange: system.NotifyChange,
@@ -30,7 +31,7 @@ func NewWatcher() *watcher {
 }
 
 func (w *watcher) Start(o *Options) error {
-	o.Logger.Debug("starting watcher")
+	o.Logger.Debug("starting cached watcher")
 	watcher, err := w.newWatcher(o)
 	if err != nil {
 		return err
@@ -61,14 +62,21 @@ func (w *watcher) newWatcher(o *Options) (*agent.Watcher, error) {
 	}
 
 	o.Logger.Infof("starting state watcher with spec: '%s'", config.PersistentSpec)
+	return agent.NewWatcher(agent.WatcherOptions{
+		Spec:    config.PersistentSpec,
+		Context: o.Context,
+		Logger:  o.Logger,
+	}, parseWatcherFns(o.Logger, o.Cache.GardenerCache, config)...)
+}
 
+func parseWatcherFns(l *logrus.Entry, gardenerCache agent.Cache[*v1beta1.ShootList], config *config.Config) []agent.WatchFn {
 	funcs := []agent.WatchFn{}
 	for i := range config.GardenerProjects {
 		p := config.GardenerProjects[i]
-		r := o.Cache.GardenerCache.Register(p.Namespace)
+		r := gardenerCache.Register(p.Namespace)
 
-		o.Logger.Debugf("creating watcher func for namespace: '%s'", p.Namespace)
-		l := o.Logger.WithFields(
+		l.Debugf("creating watcher func for namespace: '%s'", p.Namespace)
+		l := l.WithFields(
 			logrus.Fields{
 				"provider": "gardener",
 				"project":  p.Namespace,
@@ -79,9 +87,5 @@ func (w *watcher) newWatcher(o *Options) (*agent.Watcher, error) {
 		)
 	}
 
-	return agent.NewWatcher(agent.WatcherOptions{
-		Spec:    config.PersistentSpec,
-		Context: o.Context,
-		Logger:  o.Logger,
-	}, funcs...)
+	return funcs
 }

@@ -31,6 +31,7 @@ func NewCmd(o *options) *cobra.Command {
 
 	cmd.Flags().StringVarP(&o.configPath, "config-path", "c", config.ConfigPath, "Provides path to the config file.")
 	cmd.Flags().StringVar(&o.socketAddress, "socket-path", agent.Address, "Provides path to the socket file.")
+	cmd.Flags().BoolVar(&o.onDemand, "on-demand", false, "If true cloudagent will fetch data from cloud providers on demand.")
 
 	return cmd
 }
@@ -38,18 +39,21 @@ func NewCmd(o *options) *cobra.Command {
 func run(o *options) error {
 	o.Logger.Info("starting gardeners agent")
 
-	cache := &agent.ServerCache{
-		GardenerCache: agent.NewCache[*v1beta1_apis.ShootList](),
-	}
-	go func() {
-		for {
-			cache.GeneralError = nil
-			startWatcher(o, cache)
-
-			// wait 1sec to avoid CPU throttling
-			time.Sleep(time.Second * 1)
+	var resourceGetter agent.ResourceGetter
+	if o.onDemand {
+		resourceGetter = watcher.NewOnDemand(&watcher.NewOnDemandOptions{
+			Context:    o.Context,
+			Logger:     o.Logger.WithField("component", "watcher"),
+			ConfigPath: o.configPath,
+		})
+	} else {
+		c := &agent.ServerCache{
+			GardenerCache: agent.NewCache[*v1beta1_apis.ShootList](),
 		}
-	}()
+
+		resourceGetter = c
+		go setupWatcher(o, c)
+	}
 
 	o.Logger.Debugf("configuring grpc server - network '%s', address '%s'", o.socketNetwork, o.socketAddress)
 	lis, err := agent.NewSocket(o.socketNetwork, o.socketAddress)
@@ -59,8 +63,8 @@ func run(o *options) error {
 
 	grpcServer := googlerpc.NewServer(googlerpc.EmptyServerOption{})
 	agentServer := agent.NewServer(&agent.ServerOption{
-		Cache:  cache,
-		Logger: o.Logger.WithField("component", "server"),
+		ResourceGetter: resourceGetter,
+		Logger:         o.Logger.WithField("component", "server"),
 	})
 	cloud_agent.RegisterAgentServer(grpcServer, agentServer)
 
@@ -68,8 +72,18 @@ func run(o *options) error {
 	return grpcServer.Serve(lis)
 }
 
+func setupWatcher(o *options, cache *agent.ServerCache) {
+	for {
+		cache.GeneralError = nil
+		startWatcher(o, cache)
+
+		// wait 1sec to avoid CPU throttling
+		time.Sleep(time.Second * 1)
+	}
+}
+
 func startWatcher(o *options, cache *agent.ServerCache) {
-	if err := watcher.NewWatcher().Start(&watcher.Options{
+	if err := watcher.New().Start(&watcher.Options{
 		Context:    o.Context,
 		Logger:     o.Logger.WithField("component", "watcher"),
 		Cache:      cache,

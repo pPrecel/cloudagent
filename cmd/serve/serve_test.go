@@ -86,6 +86,43 @@ func Test_run(t *testing.T) {
 		assert.True(t, socketExist, "socket does not exist")
 	})
 
+	t.Run("validate and run on-demand", func(t *testing.T) {
+		l := logrus.New()
+		l.Out = io.Discard
+		o := &options{
+			Options: &command.Options{
+				Logger:  l,
+				Context: context.Background(),
+			},
+			configPath:    "/empty/path",
+			socketNetwork: testNetwork,
+		}
+		c := NewCmd(o)
+
+		o.socketAddress = testAddress
+		o.onDemand = true
+
+		err := c.PreRunE(c, []string{})
+		assert.NoError(t, err)
+
+		go func() {
+			assert.NoError(t, c.RunE(c, []string{}))
+		}()
+
+		socketExist := false
+		for i := 0; i < 5; i++ {
+			time.Sleep(1 * time.Second)
+
+			_, err = os.Stat(testAddress)
+			if err == nil {
+				socketExist = true
+				break
+			}
+		}
+
+		assert.True(t, socketExist, "socket does not exist")
+	})
+
 	t.Run("socket error", func(t *testing.T) {
 		l := logrus.New()
 		l.Out = io.Discard

@@ -337,8 +337,8 @@ func fixServer(l *logrus.Entry, c *agent.ServerCache) (stop func(), err error) {
 
 	grpcServer := googlerpc.NewServer(googlerpc.EmptyServerOption{})
 	agentServer := agent.NewServer(&agent.ServerOption{
-		Cache:  c,
-		Logger: l,
+		ResourceGetter: c,
+		Logger:         l,
 	})
 	cloud_agent.RegisterAgentServer(grpcServer, agentServer)
 

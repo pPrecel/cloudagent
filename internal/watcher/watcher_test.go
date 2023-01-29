@@ -30,7 +30,7 @@ var (
 
 func TestNewWatcher(t *testing.T) {
 	t.Run("new watcher", func(t *testing.T) {
-		assert.NotNil(t, NewWatcher())
+		assert.NotNil(t, New())
 	})
 }
 
