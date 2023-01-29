@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"reflect"
 	"testing"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
@@ -12,6 +11,19 @@ import (
 	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+var (
+	testShootList = &v1beta1.ShootList{
+		Items: []v1beta1.Shoot{
+			{
+				ObjectMeta: v1.ObjectMeta{
+					Name: "test-shoot",
+				},
+			},
+		},
+	}
 )
 
 func TestNewOnDemand(t *testing.T) {
@@ -21,7 +33,7 @@ func TestNewOnDemand(t *testing.T) {
 	l.Logger.Out = io.Discard
 
 	t.Run("build new watcher", func(t *testing.T) {
-		assert.NotNil(t, NewOnDemand(&NewOnDemandOptions{
+		assert.NotNil(t, newOnDemand(&Options{
 			Logger: l,
 		}))
 	})
@@ -32,6 +44,9 @@ func Test_onDemandWatcher_GetGeneralError(t *testing.T) {
 		w := onDemandWatcher{
 			getConfig: func(s string) (*config.Config, error) {
 				return nil, nil
+			},
+			parseWatcherFns: func(e *logrus.Entry, a agent.Cache[*v1beta1.ShootList], c *config.Config) []agent.WatchFn {
+				return []agent.WatchFn{}
 			},
 		}
 
@@ -50,39 +65,22 @@ func Test_onDemandWatcher_GetGeneralError(t *testing.T) {
 }
 
 func Test_onDemandWatcher_GetGardenerCache(t *testing.T) {
-	type fields struct {
-		cache           agent.Cache[*v1beta1.ShootList]
-		config          *config.Config
-		parseWatcherFns func(*logrus.Entry, agent.Cache[*v1beta1.ShootList], *config.Config) []agent.WatchFn
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   agent.Cache[*v1beta1.ShootList]
-	}{
-		{
-			name: "get cache",
-			fields: fields{
-				cache: agent.NewCache[*v1beta1.ShootList](),
-				parseWatcherFns: func(e *logrus.Entry, a agent.Cache[*v1beta1.ShootList], c *config.Config) []agent.WatchFn {
-					return []agent.WatchFn{
-						func(ctx context.Context) {},
-					}
+	t.Run("update cache using fns", func(t *testing.T) {
+		cache := agent.NewCache[*v1beta1.ShootList]()
+		cache.Register("test-1").Set(nil, nil)
+
+		w := onDemandWatcher{
+			cache: cache,
+			fns: []agent.WatchFn{
+				func(ctx context.Context) {
+					cache.Register("test-1").Set(testShootList, nil)
 				},
 			},
-			want: agent.NewCache[*v1beta1.ShootList](),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			rw := &onDemandWatcher{
-				cache:           tt.fields.cache,
-				config:          tt.fields.config,
-				parseWatcherFns: tt.fields.parseWatcherFns,
-			}
-			if got := rw.GetGardenerCache(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("onDemandWatcher.GetGardenerCache() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+		}
+
+		cache = w.GetGardenerCache()
+
+		assert.Equal(t, testShootList, cache.Resources()["test-1"].Get().Value)
+		assert.NoError(t, cache.Resources()["test-1"].Get().Error)
+	})
 }

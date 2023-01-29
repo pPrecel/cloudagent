@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	v1beta1_apis "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	command "github.com/pPrecel/cloudagent/cmd"
 	"github.com/pPrecel/cloudagent/pkg/agent"
 	"github.com/pPrecel/cloudagent/pkg/config"
@@ -140,25 +139,22 @@ func Test_run(t *testing.T) {
 
 		assert.Error(t, c.RunE(c, []string{}))
 	})
-}
 
-func Test_startWatcher(t *testing.T) {
-	l := logrus.New()
-	l.Out = io.Discard
-
-	t.Run("handle error", func(t *testing.T) {
-		c := &agent.ServerCache{
-			GardenerCache: agent.NewCache[*v1beta1_apis.ShootList](),
-		}
-		startWatcher(&options{
+	t.Run("newWatcher error", func(t *testing.T) {
+		l := logrus.New()
+		l.Out = io.Discard
+		o := &options{
 			Options: &command.Options{
 				Logger:  l,
 				Context: context.Background(),
 			},
+			configPath:    "/empty/path",
 			socketNetwork: testNetwork,
-			socketAddress: testAddress,
-		}, c)
+		}
+		c := NewCmd(o)
 
-		assert.Len(t, c.GardenerCache.Resources(), 0)
+		o.configPath = "/empty/path"
+
+		assert.Error(t, c.RunE(c, []string{}))
 	})
 }

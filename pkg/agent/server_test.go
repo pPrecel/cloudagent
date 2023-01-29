@@ -194,7 +194,7 @@ func Test_server_GardenerShoots(t *testing.T) {
 				},
 				logger: l,
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "state list",

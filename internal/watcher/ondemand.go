@@ -9,15 +9,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type NewOnDemandOptions struct {
-	Context    context.Context
-	Logger     *logrus.Entry
-	ConfigPath string
-}
-
 type onDemandWatcher struct {
-	cache  agent.Cache[*v1beta1.ShootList]
-	config *config.Config
+	cache agent.Cache[*v1beta1.ShootList]
+	fns   []agent.WatchFn
 
 	context    context.Context
 	logger     *logrus.Entry
@@ -27,30 +21,33 @@ type onDemandWatcher struct {
 	parseWatcherFns func(*logrus.Entry, agent.Cache[*v1beta1.ShootList], *config.Config) []agent.WatchFn
 }
 
-func NewOnDemand(o *NewOnDemandOptions) *onDemandWatcher {
-	o.Logger.Info("starting on demand watcher")
+func newOnDemand(o *Options) *onDemandWatcher {
 	return &onDemandWatcher{
-		context:    o.Context,
-		logger:     o.Logger,
-		configPath: o.ConfigPath,
-		getConfig:  config.Read,
+		context:         o.Context,
+		logger:          o.Logger,
+		cache:           agent.NewCache[*v1beta1.ShootList](),
+		configPath:      o.ConfigPath,
+		getConfig:       config.Read,
+		parseWatcherFns: parseWatcherFns,
 	}
 }
 
 func (rw *onDemandWatcher) GetGardenerCache() agent.Cache[*v1beta1.ShootList] {
-	fns := rw.parseWatcherFns(rw.logger, rw.cache, rw.config)
-
-	for i := range fns {
-		fns[i](rw.context)
+	rw.cache.Clean()
+	for i := range rw.fns {
+		rw.fns[i](rw.context)
 	}
 
 	return rw.cache
 }
 
 func (rw *onDemandWatcher) GetGeneralError() error {
-	rw.cache = agent.NewCache[*v1beta1.ShootList]()
+	cfg, err := rw.getConfig(rw.configPath)
+	if err != nil {
+		return err
+	}
 
-	var err error
-	rw.config, err = rw.getConfig(rw.configPath)
-	return err
+	rw.fns = rw.parseWatcherFns(rw.logger, rw.cache, cfg)
+
+	return nil
 }

@@ -30,7 +30,7 @@ var (
 
 func TestNewWatcher(t *testing.T) {
 	t.Run("new watcher", func(t *testing.T) {
-		assert.NotNil(t, New())
+		assert.NotNil(t, newCached(nil, nil))
 	})
 }
 
@@ -48,6 +48,7 @@ func Test_watcher_Start(t *testing.T) {
 		name    string
 		fields  fields
 		args    *Options
+		cache   *agent.ServerCache
 		wantErr bool
 	}{
 		{
@@ -71,9 +72,9 @@ func Test_watcher_Start(t *testing.T) {
 				Context:    context.Background(),
 				Logger:     l,
 				ConfigPath: "",
-				Cache: &agent.ServerCache{
-					GardenerCache: agent.NewCache[*v1beta1.ShootList](),
-				},
+			},
+			cache: &agent.ServerCache{
+				GardenerCache: agent.NewCache[*v1beta1.ShootList](),
 			},
 			wantErr: false,
 		},
@@ -98,9 +99,9 @@ func Test_watcher_Start(t *testing.T) {
 				Context:    context.Background(),
 				Logger:     l,
 				ConfigPath: "",
-				Cache: &agent.ServerCache{
-					GardenerCache: agent.NewCache[*v1beta1.ShootList](),
-				},
+			},
+			cache: &agent.ServerCache{
+				GardenerCache: agent.NewCache[*v1beta1.ShootList](),
 			},
 			wantErr: true,
 		},
@@ -115,9 +116,9 @@ func Test_watcher_Start(t *testing.T) {
 				Context:    context.Background(),
 				Logger:     l,
 				ConfigPath: "",
-				Cache: &agent.ServerCache{
-					GardenerCache: agent.NewCache[*v1beta1.ShootList](),
-				},
+			},
+			cache: &agent.ServerCache{
+				GardenerCache: agent.NewCache[*v1beta1.ShootList](),
 			},
 			wantErr: true,
 		},
@@ -133,9 +134,9 @@ func Test_watcher_Start(t *testing.T) {
 				Context:    context.Background(),
 				Logger:     l,
 				ConfigPath: "",
-				Cache: &agent.ServerCache{
-					GardenerCache: agent.NewCache[*v1beta1.ShootList](),
-				},
+			},
+			cache: &agent.ServerCache{
+				GardenerCache: agent.NewCache[*v1beta1.ShootList](),
 			},
 			wantErr: true,
 		},
@@ -143,11 +144,13 @@ func Test_watcher_Start(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			w := &watcher{
+				options:      tt.args,
 				getConfig:    tt.fields.getConfig,
 				notifyChange: tt.fields.notifyChange,
+				cache:        tt.cache,
 			}
 
-			if err := w.Start(tt.args); (err != nil) != tt.wantErr {
+			if err := w.start(); (err != nil) != tt.wantErr {
 				t.Errorf("watcher.Start() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

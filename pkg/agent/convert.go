@@ -14,11 +14,14 @@ func toGardenerResponse(serverCache ResourceGetter) *cloud_agent.GardenerRespons
 		err = serverCache.GetGeneralError().Error()
 	}
 
-	resources := serverCache.GetGardenerCache().Resources()
 	shootList := map[string]*cloud_agent.ShootList{}
-	for key := range resources {
-		r := resources[key]
-		shootList[key] = toShootList(r)
+	gardenerCache := serverCache.GetGardenerCache()
+	if gardenerCache != nil {
+		resources := gardenerCache.Resources()
+		for key := range resources {
+			r := resources[key]
+			shootList[key] = toShootList(r)
+		}
 	}
 
 	return &cloud_agent.GardenerResponse{

@@ -40,8 +40,7 @@ func (s *server) GardenerShoots(ctx context.Context, _ *cloud_agent.Empty) (*clo
 	logger := s.logger.WithField("request-id", rand.Intn(math.MaxInt))
 	logger.Debug("handling request")
 
-	if s.resourceGetter == nil ||
-		(s.resourceGetter != nil && s.resourceGetter.GetGardenerCache() == nil) {
+	if s.resourceGetter == nil {
 		errMessage := "can't get latest shoots data"
 		logger.Debug(errMessage)
 		return nil, errors.New(errMessage)

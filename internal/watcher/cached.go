@@ -1,8 +1,6 @@
 package watcher
 
 import (
-	"context"
-
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloudagent/internal/gardener"
 	"github.com/pPrecel/cloudagent/internal/system"
@@ -11,36 +9,34 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type Options struct {
-	Context    context.Context
-	Logger     *logrus.Entry
-	Cache      *agent.ServerCache
-	ConfigPath string
-}
-
 type watcher struct {
+	options *Options
+	cache   *agent.ServerCache
+
 	getConfig    func(string) (*config.Config, error)
 	notifyChange func(string) (*system.Notifier, error)
 }
 
-func New() *watcher {
+func newCached(cache *agent.ServerCache, o *Options) *watcher {
 	return &watcher{
+		options:      o,
+		cache:        cache,
 		getConfig:    config.Read,
 		notifyChange: system.NotifyChange,
 	}
 }
 
-func (w *watcher) Start(o *Options) error {
-	o.Logger.Debug("starting cached watcher")
-	watcher, err := w.newWatcher(o)
+func (w *watcher) start() error {
+	w.options.Logger.Debug("starting cached watcher")
+	watcher, err := w.newWatcher()
 	if err != nil {
 		return err
 	}
 	defer watcher.Stop()
 	watcher.Start()
 
-	o.Logger.Info("starting config notifier")
-	n, err := w.notifyChange(o.ConfigPath)
+	w.options.Logger.Info("starting config notifier")
+	n, err := w.notifyChange(w.options.ConfigPath)
 	if err != nil {
 		return err
 	}
@@ -54,19 +50,19 @@ func (w *watcher) Start(o *Options) error {
 	}
 }
 
-func (w *watcher) newWatcher(o *Options) (*agent.Watcher, error) {
-	o.Logger.Infof("reading config from path: '%s'", o.ConfigPath)
-	config, err := w.getConfig(o.ConfigPath)
+func (w *watcher) newWatcher() (*agent.Watcher, error) {
+	w.options.Logger.Infof("reading config from path: '%s'", w.options.ConfigPath)
+	config, err := w.getConfig(w.options.ConfigPath)
 	if err != nil {
 		return nil, err
 	}
 
-	o.Logger.Infof("starting state watcher with spec: '%s'", config.PersistentSpec)
+	w.options.Logger.Infof("starting state watcher with spec: '%s'", config.PersistentSpec)
 	return agent.NewWatcher(agent.WatcherOptions{
 		Spec:    config.PersistentSpec,
-		Context: o.Context,
-		Logger:  o.Logger,
-	}, parseWatcherFns(o.Logger, o.Cache.GardenerCache, config)...)
+		Context: w.options.Context,
+		Logger:  w.options.Logger,
+	}, parseWatcherFns(w.options.Logger, w.cache.GardenerCache, config)...)
 }
 
 func parseWatcherFns(l *logrus.Entry, gardenerCache agent.Cache[*v1beta1.ShootList], config *config.Config) []agent.WatchFn {
