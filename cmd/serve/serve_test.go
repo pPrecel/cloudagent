@@ -3,6 +3,7 @@ package serve
 import (
 	"context"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -52,6 +53,11 @@ func Test_run(t *testing.T) {
 	t.Run("validate and run", func(t *testing.T) {
 		l := logrus.New()
 		l.Out = io.Discard
+
+		file, err := ioutil.TempFile(os.TempDir(), "test-")
+		assert.NoError(t, err)
+		defer os.Remove(file.Name())
+
 		o := &options{
 			Options: &command.Options{
 				Logger:  l,
@@ -63,8 +69,9 @@ func Test_run(t *testing.T) {
 		c := NewCmd(o)
 
 		o.socketAddress = testAddress
+		o.configPath = file.Name()
 
-		err := c.PreRunE(c, []string{})
+		err = c.PreRunE(c, []string{})
 		assert.NoError(t, err)
 
 		go func() {
