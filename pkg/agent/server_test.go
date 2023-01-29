@@ -170,7 +170,7 @@ func Test_server_GardenerShoots(t *testing.T) {
 	l.Logger.Out = io.Discard
 
 	type fields struct {
-		gardenerCache *ServerCache
+		gardenerCache ResourceGetter
 		logger        *logrus.Entry
 	}
 	tests := []struct {
