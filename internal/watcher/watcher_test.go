@@ -16,7 +16,7 @@ import (
 var (
 	fixOndemandConfig = func(s string) (*config.Config, error) {
 		return &config.Config{
-			PersistentSpec: "onDemand",
+			PersistentSpec: "on-demand",
 		}, nil
 	}
 

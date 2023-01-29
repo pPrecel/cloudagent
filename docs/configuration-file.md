@@ -26,7 +26,7 @@ See all parameter descriptions:
 
 | Field  | Description |
 |-|-|
-| **persistentSpec** | A cron extension represents a set of times. More info [here](https://pkg.go.dev/github.com/robfig/cron#hdr-CRON_Expression_Format) |
+| **persistentSpec** | A cron extension represents a set of times. More info [here](https://pkg.go.dev/github.com/robfig/cron#hdr-CRON_Expression_Format). Also possible is to set this field to `on-demand` to run the agent in a mode without caching. |
 | **gardenerProjects** | List of gardener projects to observe. |
 | **gardenerProjects[].namespace** | Project namespace. |
 | **gardenerProjects[].kubeconfigPath** | Path to projects kubeconfig. |

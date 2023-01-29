@@ -27,7 +27,7 @@ func newForConfig(o *Options, getConfig func(string) (*config.Config, error)) (a
 		return nil, fmt.Errorf("failed to read config: %s", err)
 	}
 
-	if cfg.PersistentSpec == "onDemand" {
+	if cfg.PersistentSpec == "on-demand" {
 		return newOnDemand(o), nil
 	} else {
 		cache := &agent.ServerCache{
