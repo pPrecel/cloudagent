@@ -16,11 +16,15 @@ type NewOnDemandOptions struct {
 }
 
 type onDemandWatcher struct {
+	cache  agent.Cache[*v1beta1.ShootList]
+	config *config.Config
+
 	context    context.Context
 	logger     *logrus.Entry
 	configPath string
 
-	getConfig func(string) (*config.Config, error)
+	getConfig       func(string) (*config.Config, error)
+	parseWatcherFns func(*logrus.Entry, agent.Cache[*v1beta1.ShootList], *config.Config) []agent.WatchFn
 }
 
 func NewOnDemand(o *NewOnDemandOptions) *onDemandWatcher {
@@ -34,23 +38,19 @@ func NewOnDemand(o *NewOnDemandOptions) *onDemandWatcher {
 }
 
 func (rw *onDemandWatcher) GetGardenerCache() agent.Cache[*v1beta1.ShootList] {
-	cache := agent.NewCache[*v1beta1.ShootList]()
-
-	cfg, err := rw.getConfig(rw.configPath)
-	if err != nil {
-		return cache
-	}
-
-	fns := parseWatcherFns(rw.logger, cache, cfg)
+	fns := rw.parseWatcherFns(rw.logger, rw.cache, rw.config)
 
 	for i := range fns {
 		fns[i](rw.context)
 	}
 
-	return cache
+	return rw.cache
 }
 
 func (rw *onDemandWatcher) GetGeneralError() error {
-	// reactive watcher never returns general error
-	return nil
+	rw.cache = agent.NewCache[*v1beta1.ShootList]()
+
+	var err error
+	rw.config, err = rw.getConfig(rw.configPath)
+	return err
 }
