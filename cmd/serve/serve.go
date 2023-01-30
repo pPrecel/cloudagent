@@ -35,14 +35,13 @@ func NewCmd(o *options) *cobra.Command {
 func run(o *options) error {
 	o.Logger.Info("starting gardeners agent")
 
-	resourceGetter, err := watcher.NewForConfig(&watcher.Options{
+	watcher := watcher.New(&watcher.Options{
 		Context:    o.Context,
 		Logger:     o.Logger.WithField("component", "watcher"),
 		ConfigPath: o.configPath,
 	})
-	if err != nil {
-		return err
-	}
+
+	go watcher.Start()
 
 	o.Logger.Debugf("configuring grpc server - network '%s', address '%s'", o.socketNetwork, o.socketAddress)
 	lis, err := agent.NewSocket(o.socketNetwork, o.socketAddress)
@@ -52,7 +51,7 @@ func run(o *options) error {
 
 	grpcServer := googlerpc.NewServer(googlerpc.EmptyServerOption{})
 	agentServer := agent.NewServer(&agent.ServerOption{
-		ResourceGetter: resourceGetter,
+		ResourceGetter: watcher,
 		Logger:         o.Logger.WithField("component", "server"),
 	})
 	cloud_agent.RegisterAgentServer(grpcServer, agentServer)
