@@ -109,22 +109,4 @@ func Test_run(t *testing.T) {
 
 		assert.Error(t, c.RunE(c, []string{}))
 	})
-
-	t.Run("newWatcher error", func(t *testing.T) {
-		l := logrus.New()
-		l.Out = io.Discard
-		o := &options{
-			Options: &command.Options{
-				Logger:  l,
-				Context: context.Background(),
-			},
-			configPath:    "/empty/path",
-			socketNetwork: testNetwork,
-		}
-		c := NewCmd(o)
-
-		o.configPath = "/empty/path"
-
-		assert.Error(t, c.RunE(c, []string{}))
-	})
 }

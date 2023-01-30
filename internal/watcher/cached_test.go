@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	"github.com/pPrecel/cloudagent/internal/system"
 	"github.com/pPrecel/cloudagent/pkg/agent"
 	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/sirupsen/logrus"
@@ -28,50 +27,52 @@ var (
 	}
 )
 
-func TestNewWatcher(t *testing.T) {
-	t.Run("new watcher", func(t *testing.T) {
-		assert.NotNil(t, newCached(nil, nil))
+func TestNewCached(t *testing.T) {
+	t.Run("new cached watcher", func(t *testing.T) {
+		assert.NotNil(t, newCached(nil, nil, ""))
 	})
 }
 
-func Test_watcher_Start(t *testing.T) {
+func Test_cached_Start(t *testing.T) {
 	l := &logrus.Entry{
 		Logger: logrus.New(),
 	}
 	l.Logger.Out = io.Discard
 
 	type fields struct {
-		getConfig    func(string) (*config.Config, error)
-		notifyChange func(string) (*system.Notifier, error)
+		logger     *logrus.Entry
+		configPath string
+		getConfig  func(string) (*config.Config, error)
+	}
+	type args struct {
+		context context.Context
 	}
 	tests := []struct {
 		name    string
 		fields  fields
-		args    *Options
+		args    args
 		cache   *agent.ServerCache
 		wantErr bool
 	}{
 		{
-			name: "notify change",
+			name: "context done",
 			fields: fields{
-				getConfig: fixConfigFn,
-				notifyChange: func(s string) (*system.Notifier, error) {
-					n := &system.Notifier{
-						IsMotified: make(chan interface{}),
-						Errors:     make(chan error),
-						Stop:       func() {},
-					}
-					go func() {
-						n.IsMotified <- 1
-					}()
-
-					return n, nil
+				configPath: "",
+				logger:     l,
+				getConfig: func(s string) (*config.Config, error) {
+					return &config.Config{
+						PersistentSpec: "@every 120s",
+						GardenerProjects: []config.GardenerProject{
+							{
+								Namespace:      "test",
+								KubeconfigPath: "/test/path",
+							},
+						},
+					}, nil
 				},
 			},
-			args: &Options{
-				Context:    context.Background(),
-				Logger:     l,
-				ConfigPath: "",
+			args: args{
+				context: fixCanceledContext(),
 			},
 			cache: &agent.ServerCache{
 				GardenerCache: agent.NewCache[*v1beta1.ShootList](),
@@ -79,61 +80,16 @@ func Test_watcher_Start(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "notify change error",
-			fields: fields{
-				getConfig: fixConfigFn,
-				notifyChange: func(s string) (*system.Notifier, error) {
-					n := &system.Notifier{
-						IsMotified: make(chan interface{}),
-						Errors:     make(chan error),
-						Stop:       func() {},
-					}
-					go func() {
-						n.Errors <- errors.New("test error")
-					}()
-
-					return n, nil
-				},
-			},
-			args: &Options{
-				Context:    context.Background(),
-				Logger:     l,
-				ConfigPath: "",
-			},
-			cache: &agent.ServerCache{
-				GardenerCache: agent.NewCache[*v1beta1.ShootList](),
-			},
-			wantErr: true,
-		},
-		{
 			name: "getConfig error",
 			fields: fields{
+				configPath: "",
+				logger:     l,
 				getConfig: func(s string) (*config.Config, error) {
 					return nil, errors.New("test error")
 				},
 			},
-			args: &Options{
-				Context:    context.Background(),
-				Logger:     l,
-				ConfigPath: "",
-			},
-			cache: &agent.ServerCache{
-				GardenerCache: agent.NewCache[*v1beta1.ShootList](),
-			},
-			wantErr: true,
-		},
-		{
-			name: "notifyChange error",
-			fields: fields{
-				getConfig: fixConfigFn,
-				notifyChange: func(s string) (*system.Notifier, error) {
-					return nil, errors.New("test error")
-				},
-			},
-			args: &Options{
-				Context:    context.Background(),
-				Logger:     l,
-				ConfigPath: "",
+			args: args{
+				context: context.Background(),
 			},
 			cache: &agent.ServerCache{
 				GardenerCache: agent.NewCache[*v1beta1.ShootList](),
@@ -143,14 +99,14 @@ func Test_watcher_Start(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := &watcher{
-				options:      tt.args,
-				getConfig:    tt.fields.getConfig,
-				notifyChange: tt.fields.notifyChange,
-				cache:        tt.cache,
+			w := &cached{
+				logger:     tt.fields.logger,
+				configPath: tt.fields.configPath,
+				getConfig:  tt.fields.getConfig,
+				cache:      tt.cache,
 			}
 
-			if err := w.start(); (err != nil) != tt.wantErr {
+			if err := w.start(tt.args.context); (err != nil) != tt.wantErr {
 				t.Errorf("watcher.Start() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

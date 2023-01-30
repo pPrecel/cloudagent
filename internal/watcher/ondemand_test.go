@@ -41,7 +41,8 @@ func TestNewOnDemand(t *testing.T) {
 
 func Test_onDemandWatcher_GetGeneralError(t *testing.T) {
 	t.Run("get nil", func(t *testing.T) {
-		w := onDemandWatcher{
+		w := ondemand{
+			cache: agent.NewCache[*v1beta1.ShootList](),
 			getConfig: func(s string) (*config.Config, error) {
 				return nil, nil
 			},
@@ -54,7 +55,8 @@ func Test_onDemandWatcher_GetGeneralError(t *testing.T) {
 	})
 
 	t.Run("get general error", func(t *testing.T) {
-		w := onDemandWatcher{
+		w := ondemand{
+			cache: agent.NewCache[*v1beta1.ShootList](),
 			getConfig: func(s string) (*config.Config, error) {
 				return nil, errors.New("test error")
 			},
@@ -69,7 +71,7 @@ func Test_onDemandWatcher_GetGardenerCache(t *testing.T) {
 		cache := agent.NewCache[*v1beta1.ShootList]()
 		cache.Register("test-1").Set(nil, nil)
 
-		w := onDemandWatcher{
+		w := ondemand{
 			cache: cache,
 			fns: []agent.WatchFn{
 				func(ctx context.Context) {
@@ -82,5 +84,15 @@ func Test_onDemandWatcher_GetGardenerCache(t *testing.T) {
 
 		assert.Equal(t, testShootList, cache.Resources()["test-1"].Get().Value)
 		assert.NoError(t, cache.Resources()["test-1"].Get().Error)
+	})
+}
+
+func Test_ondemand_start(t *testing.T) {
+	t.Run("context done", func(t *testing.T) {
+		ctx := fixCanceledContext()
+
+		w := ondemand{}
+		err := w.start(ctx)
+		assert.NoError(t, err)
 	})
 }
