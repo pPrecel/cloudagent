@@ -24,23 +24,21 @@ builds:
     - "7"
 
 archives:
-  - replacements:
-      386: i386
-      amd64: x86_64
-    files:
+  - files:
       - docs/
       - README.md
       - LICENSE
 
-nfpms:
-- maintainer: Filip Strózik <filip.strozik@outlook.com>
-  description: The simple and easy-to-use program designed to watch user activity for Cloud Providers.
-  homepage: https://github.com/pPrecel/cloudagent
-  license: MIT
-  formats:
-  - deb
-  - rpm
-  - apk
+# TODO: register cloudagent on archlinux, deb and apk repositories
+# nfpms:
+# - maintainer: Filip Strózik <filip.strozik@outlook.com>
+#   description: The simple and easy-to-use program designed to watch user activity for Cloud Providers.
+#   homepage: https://github.com/pPrecel/cloudagent
+#   license: MIT
+#   formats:
+#   - deb
+#   - apk
+#   - archlinux
 
 brews:
   - homepage: "http://github.com/pPrecel/cloudagent"
