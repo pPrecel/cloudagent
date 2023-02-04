@@ -39,6 +39,12 @@ Visit the [releases page](https://github.com/pPrecel/cloudagent/releases) to dow
     brew services start cloudagent
     ```
 
+### Manual
+
+1. Go to the [Releases](https://github.com/pPrecel/cloudagent/releases/latest), and download the right cloudagent version for your system.
+
+> **NOTE:** We don't fully support any Linux package managers ( except brew ). That means you must on your own craft a service background configuration ( Daemon ).
+
 ## Make use of it
 
 After installing and starting the service process you can pass configuration to immediately say agent which clouds should he observe (read more [here](./docs/configuration-file.md)). To check that program is working correctly use:
