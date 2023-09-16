@@ -7,13 +7,12 @@ import (
 	"github.com/pPrecel/cloudagent/pkg/cache"
 	"github.com/pPrecel/cloudagent/pkg/types"
 	"github.com/sirupsen/logrus"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 )
 
 //go:generate mockery --name=Client --output=automock --outpkg=automock
 type Client interface {
-	List(context.Context, v1.ListOptions) (*types.ShootList, error)
+	List(context.Context) (*types.ShootList, error)
 }
 
 func NewWatchFunc(l *logrus.Entry, r cache.GardenerRegisteredResource, namespace, kubeconfig string) agent.WatchFn {
@@ -37,7 +36,7 @@ func newWatchFunc(l *logrus.Entry, r cache.GardenerRegisteredResource, clientBui
 			}
 		}
 
-		list, err := c.List(context, v1.ListOptions{})
+		list, err := c.List(context)
 		r.Set(list, err)
 		if err != nil {
 			l.Errorf("when watching for shoots: %s", err.Error())

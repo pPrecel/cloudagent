@@ -69,7 +69,7 @@ func Test_newWatchFunc(t *testing.T) {
 				r: cache.NewGardenerCache().Register("test"),
 				clientBuilder: func() (Client, error) {
 					c := automock.NewClient(t)
-					c.On("List", mock.Anything, v1.ListOptions{}).Return(shootList, nil).Once()
+					c.On("List", mock.Anything).Return(shootList, nil).Once()
 
 					return c, nil
 				},
@@ -83,7 +83,7 @@ func Test_newWatchFunc(t *testing.T) {
 				r: cache.NewGardenerCache().Register("test"),
 				clientBuilder: func() (Client, error) {
 					c := automock.NewClient(t)
-					c.On("List", mock.Anything, v1.ListOptions{}).Return(nil, errors.New("test error")).Once()
+					c.On("List", mock.Anything).Return(nil, errors.New("test error")).Once()
 
 					return c, nil
 				},
@@ -97,7 +97,7 @@ func Test_newWatchFunc(t *testing.T) {
 				r: cache.NewGardenerCache().Register("test"),
 				clientBuilder: func() (Client, error) {
 					c := automock.NewClient(t)
-					c.On("List", mock.Anything, v1.ListOptions{}).Return(nil, errors.New("test error")).Once()
+					c.On("List", mock.Anything).Return(nil, errors.New("test error")).Once()
 
 					return c, nil
 				},

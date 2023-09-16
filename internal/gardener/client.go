@@ -35,13 +35,17 @@ func newClusterConfig(kubeconfigPath string) (*rest.Config, error) {
 	return gardenerClusterConfig, nil
 }
 
-type shootClient struct {
-	resourceInterface dynamic.NamespaceableResourceInterface
-	namespace         string
+//go:generate mockery --name=ResourceInterface --output=automock --outpkg=automock
+type ResourceInterface interface {
+	List(context.Context, v1.ListOptions) (*unstructured.UnstructuredList, error)
 }
 
-func (sc *shootClient) List(ctx context.Context, opts v1.ListOptions) (*types.ShootList, error) {
-	resources, err := sc.resourceInterface.Namespace(sc.namespace).List(ctx, opts)
+type shootClient struct {
+	resourceInterface ResourceInterface
+}
+
+func (sc *shootClient) List(ctx context.Context) (*types.ShootList, error) {
+	resources, err := sc.resourceInterface.List(ctx, v1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +85,6 @@ func newShootClient(config *rest.Config, namespace string) (Client, error) {
 	}
 
 	return &shootClient{
-		resourceInterface: client.Resource(shootResource),
-		namespace:         namespace,
+		resourceInterface: client.Resource(shootResource).Namespace(namespace),
 	}, nil
 }
