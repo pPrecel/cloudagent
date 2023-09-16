@@ -1,4 +1,4 @@
-package agent
+package cache
 
 import (
 	"sync"
@@ -7,12 +7,19 @@ import (
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 )
 
+type GardenerCache Cache[*v1beta1.ShootList]
+type GardenerRegisteredResource RegisteredResource[*v1beta1.ShootList]
+
+func NewGardenerCache() GardenerCache {
+	return NewCache[*v1beta1.ShootList]()
+}
+
 type ServerCache struct {
-	GardenerCache Cache[*v1beta1.ShootList]
+	GardenerCache GardenerCache
 	GeneralError  error
 }
 
-func (sc *ServerCache) GetGardenerCache() Cache[*v1beta1.ShootList] {
+func (sc *ServerCache) GetGardenerCache() GardenerCache {
 	return sc.GardenerCache
 }
 

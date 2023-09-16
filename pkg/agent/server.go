@@ -4,8 +4,8 @@ import (
 	"context"
 	"math"
 
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
+	"github.com/pPrecel/cloudagent/pkg/cache"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/rand"
@@ -14,7 +14,7 @@ import (
 var _ cloud_agent.AgentServer = &server{}
 
 type ResourceGetter interface {
-	GetGardenerCache() Cache[*v1beta1.ShootList]
+	GetGardenerCache() cache.GardenerCache
 	GetGeneralError() error
 }
 

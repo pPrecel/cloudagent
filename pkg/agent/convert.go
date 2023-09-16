@@ -5,6 +5,7 @@ import (
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
+	"github.com/pPrecel/cloudagent/pkg/cache"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -30,7 +31,7 @@ func toGardenerResponse(serverCache ResourceGetter) *cloud_agent.GardenerRespons
 	}
 }
 
-func toShootList(resource RegisteredResource[*v1beta1.ShootList]) *cloud_agent.ShootList {
+func toShootList(resource cache.GardenerRegisteredResource) *cloud_agent.ShootList {
 	r := resource.Get()
 
 	err := ""

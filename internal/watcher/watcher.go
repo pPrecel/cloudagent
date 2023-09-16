@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloudagent/internal/system"
 	"github.com/pPrecel/cloudagent/pkg/agent"
+	"github.com/pPrecel/cloudagent/pkg/cache"
 	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/sirupsen/logrus"
 )
@@ -38,7 +38,7 @@ func New(o *Options) *watcher {
 	}
 }
 
-func (w *watcher) GetGardenerCache() agent.Cache[*v1beta1.ShootList] {
+func (w *watcher) GetGardenerCache() cache.GardenerCache {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -129,14 +129,14 @@ func (w *watcher) buildWatcher() (watcherStarter, error) {
 
 func newCache(actualCache agent.ResourceGetter) agent.ResourceGetter {
 	if actualCache == nil {
-		return &agent.ServerCache{
-			GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+		return &cache.ServerCache{
+			GardenerCache: cache.NewGardenerCache(),
 		}
 	}
 
 	switch actualCache.(type) {
-	case *agent.ServerCache:
-		c := actualCache.(*agent.ServerCache)
+	case *cache.ServerCache:
+		c := actualCache.(*cache.ServerCache)
 		c.GardenerCache.Clean()
 		c.GeneralError = nil
 		return c

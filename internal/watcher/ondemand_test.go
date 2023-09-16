@@ -8,6 +8,7 @@ import (
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloudagent/pkg/agent"
+	"github.com/pPrecel/cloudagent/pkg/cache"
 	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -42,11 +43,11 @@ func TestNewOnDemand(t *testing.T) {
 func Test_onDemandWatcher_GetGeneralError(t *testing.T) {
 	t.Run("get nil", func(t *testing.T) {
 		w := ondemand{
-			cache: agent.NewCache[*v1beta1.ShootList](),
+			cache: cache.NewGardenerCache(),
 			getConfig: func(s string) (*config.Config, error) {
 				return nil, nil
 			},
-			parseWatcherFns: func(e *logrus.Entry, a agent.Cache[*v1beta1.ShootList], c *config.Config) []agent.WatchFn {
+			parseWatcherFns: func(e *logrus.Entry, a cache.GardenerCache, c *config.Config) []agent.WatchFn {
 				return []agent.WatchFn{}
 			},
 		}
@@ -56,7 +57,7 @@ func Test_onDemandWatcher_GetGeneralError(t *testing.T) {
 
 	t.Run("get general error", func(t *testing.T) {
 		w := ondemand{
-			cache: agent.NewCache[*v1beta1.ShootList](),
+			cache: cache.NewGardenerCache(),
 			getConfig: func(s string) (*config.Config, error) {
 				return nil, errors.New("test error")
 			},
@@ -68,7 +69,7 @@ func Test_onDemandWatcher_GetGeneralError(t *testing.T) {
 
 func Test_onDemandWatcher_GetGardenerCache(t *testing.T) {
 	t.Run("update cache using fns", func(t *testing.T) {
-		cache := agent.NewCache[*v1beta1.ShootList]()
+		cache := cache.NewGardenerCache()
 		cache.Register("test-1").Set(nil, nil)
 
 		w := ondemand{

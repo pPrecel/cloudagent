@@ -3,14 +3,14 @@ package watcher
 import (
 	"context"
 
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloudagent/pkg/agent"
+	"github.com/pPrecel/cloudagent/pkg/cache"
 	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/sirupsen/logrus"
 )
 
 type ondemand struct {
-	cache agent.Cache[*v1beta1.ShootList]
+	cache cache.GardenerCache
 	fns   []agent.WatchFn
 
 	context    context.Context
@@ -18,14 +18,14 @@ type ondemand struct {
 	configPath string
 
 	getConfig       func(string) (*config.Config, error)
-	parseWatcherFns func(*logrus.Entry, agent.Cache[*v1beta1.ShootList], *config.Config) []agent.WatchFn
+	parseWatcherFns func(*logrus.Entry, cache.GardenerCache, *config.Config) []agent.WatchFn
 }
 
 func newOnDemand(o *Options) *ondemand {
 	return &ondemand{
 		context:         o.Context,
 		logger:          o.Logger,
-		cache:           agent.NewCache[*v1beta1.ShootList](),
+		cache:           cache.NewGardenerCache(),
 		configPath:      o.ConfigPath,
 		getConfig:       config.Read,
 		parseWatcherFns: parseWatcherFns,
@@ -38,7 +38,7 @@ func (w *ondemand) start(ctx context.Context) error {
 	return nil
 }
 
-func (w *ondemand) GetGardenerCache() agent.Cache[*v1beta1.ShootList] {
+func (w *ondemand) GetGardenerCache() cache.GardenerCache {
 	for i := range w.fns {
 		w.fns[i](w.context)
 	}

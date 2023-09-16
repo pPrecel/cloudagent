@@ -5,6 +5,7 @@ import (
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloudagent/pkg/agent"
+	"github.com/pPrecel/cloudagent/pkg/cache"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
@@ -15,11 +16,11 @@ type Client interface {
 	List(context.Context, v1.ListOptions) (*v1beta1.ShootList, error)
 }
 
-func NewWatchFunc(l *logrus.Entry, r agent.RegisteredResource[*v1beta1.ShootList], namespace, kubeconfig string) agent.WatchFn {
+func NewWatchFunc(l *logrus.Entry, r cache.GardenerRegisteredResource, namespace, kubeconfig string) agent.WatchFn {
 	return newWatchFunc(l, r, newClientBuilder(l, newClusterConfig, namespace, kubeconfig))
 }
 
-func newWatchFunc(l *logrus.Entry, r agent.RegisteredResource[*v1beta1.ShootList], clientBuilder func() (Client, error)) agent.WatchFn {
+func newWatchFunc(l *logrus.Entry, r cache.GardenerRegisteredResource, clientBuilder func() (Client, error)) agent.WatchFn {
 	l.Debug("setting up watchers func")
 	var c Client
 	var err error

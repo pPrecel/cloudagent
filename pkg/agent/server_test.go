@@ -8,6 +8,7 @@ import (
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
+	"github.com/pPrecel/cloudagent/pkg/cache"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -189,7 +190,7 @@ func Test_server_GardenerShoots(t *testing.T) {
 		{
 			name: "nil gardener cache",
 			fields: fields{
-				gardenerCache: &ServerCache{
+				gardenerCache: &cache.ServerCache{
 					GardenerCache: nil,
 				},
 				logger: l,
@@ -235,8 +236,8 @@ func Test_server_GardenerShoots(t *testing.T) {
 		{
 			name: "geenral error",
 			fields: fields{
-				gardenerCache: &ServerCache{
-					GardenerCache: NewCache[*v1beta1.ShootList](),
+				gardenerCache: &cache.ServerCache{
+					GardenerCache: cache.NewGardenerCache(),
 					GeneralError:  errors.New("test error"),
 				},
 				logger: l,
@@ -302,20 +303,20 @@ func compareMaps(t *testing.T, m1, m2 map[string]*cloud_agent.ShootList) {
 	}
 }
 
-func fixShootListCache(s *v1beta1.ShootList) *ServerCache {
-	c := NewCache[*v1beta1.ShootList]()
+func fixShootListCache(s *v1beta1.ShootList) *cache.ServerCache {
+	c := cache.NewGardenerCache()
 
 	c.Clean()
 
 	r := c.Register("test")
 	r.Set(s, nil)
 
-	return &ServerCache{
+	return &cache.ServerCache{
 		GardenerCache: c,
 	}
 }
 
-func fixShootListCache2() *ServerCache {
+func fixShootListCache2() *cache.ServerCache {
 	c := fixShootListCache(testGardenerShootList)
 
 	r := c.GardenerCache.Register("test2")
