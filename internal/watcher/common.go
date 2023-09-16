@@ -1,14 +1,14 @@
 package watcher
 
 import (
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloudagent/internal/gardener"
 	"github.com/pPrecel/cloudagent/pkg/agent"
+	"github.com/pPrecel/cloudagent/pkg/cache"
 	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/sirupsen/logrus"
 )
 
-func parseWatcherFns(l *logrus.Entry, gardenerCache agent.Cache[*v1beta1.ShootList], config *config.Config) []agent.WatchFn {
+func parseWatcherFns(l *logrus.Entry, gardenerCache cache.GardenerCache, config *config.Config) []agent.WatchFn {
 	funcs := []agent.WatchFn{}
 	for i := range config.GardenerProjects {
 		p := config.GardenerProjects[i]

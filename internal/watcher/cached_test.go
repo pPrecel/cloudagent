@@ -6,8 +6,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	"github.com/pPrecel/cloudagent/pkg/agent"
+	"github.com/pPrecel/cloudagent/pkg/cache"
 	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -51,7 +50,7 @@ func Test_cached_Start(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		cache   *agent.ServerCache
+		cache   *cache.ServerCache
 		wantErr bool
 	}{
 		{
@@ -74,8 +73,8 @@ func Test_cached_Start(t *testing.T) {
 			args: args{
 				context: fixCanceledContext(),
 			},
-			cache: &agent.ServerCache{
-				GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+			cache: &cache.ServerCache{
+				GardenerCache: cache.NewGardenerCache(),
 			},
 			wantErr: false,
 		},
@@ -91,8 +90,8 @@ func Test_cached_Start(t *testing.T) {
 			args: args{
 				context: context.Background(),
 			},
-			cache: &agent.ServerCache{
-				GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+			cache: &cache.ServerCache{
+				GardenerCache: cache.NewGardenerCache(),
 			},
 			wantErr: true,
 		},

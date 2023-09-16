@@ -3,23 +3,23 @@ package gardener
 import (
 	"context"
 
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloudagent/pkg/agent"
+	"github.com/pPrecel/cloudagent/pkg/cache"
+	"github.com/pPrecel/cloudagent/pkg/types"
 	"github.com/sirupsen/logrus"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 )
 
 //go:generate mockery --name=Client --output=automock --outpkg=automock
 type Client interface {
-	List(context.Context, v1.ListOptions) (*v1beta1.ShootList, error)
+	List(context.Context) (*types.ShootList, error)
 }
 
-func NewWatchFunc(l *logrus.Entry, r agent.RegisteredResource[*v1beta1.ShootList], namespace, kubeconfig string) agent.WatchFn {
+func NewWatchFunc(l *logrus.Entry, r cache.GardenerRegisteredResource, namespace, kubeconfig string) agent.WatchFn {
 	return newWatchFunc(l, r, newClientBuilder(l, newClusterConfig, namespace, kubeconfig))
 }
 
-func newWatchFunc(l *logrus.Entry, r agent.RegisteredResource[*v1beta1.ShootList], clientBuilder func() (Client, error)) agent.WatchFn {
+func newWatchFunc(l *logrus.Entry, r cache.GardenerRegisteredResource, clientBuilder func() (Client, error)) agent.WatchFn {
 	l.Debug("setting up watchers func")
 	var c Client
 	var err error
@@ -36,7 +36,7 @@ func newWatchFunc(l *logrus.Entry, r agent.RegisteredResource[*v1beta1.ShootList
 			}
 		}
 
-		list, err := c.List(context, v1.ListOptions{})
+		list, err := c.List(context)
 		r.Set(list, err)
 		if err != nil {
 			l.Errorf("when watching for shoots: %s", err.Error())
@@ -56,11 +56,11 @@ func newClientBuilder(l *logrus.Entry, buildConfig func(string) (*rest.Config, e
 		}
 
 		l.Debug("creating gardener client")
-		c, err := newClient(cfg)
+		c, err := newShootClient(cfg, namespace)
 		if err != nil {
 			return nil, err
 		}
 
-		return c.Shoots(namespace), nil
+		return c, nil
 	}
 }

@@ -6,9 +6,8 @@ import (
 	"io"
 	"testing"
 
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloudagent/internal/system"
-	"github.com/pPrecel/cloudagent/pkg/agent"
+	"github.com/pPrecel/cloudagent/pkg/cache"
 	"github.com/pPrecel/cloudagent/pkg/config"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -39,11 +38,11 @@ func TestNew(t *testing.T) {
 
 type resourceGetterStub struct {
 	ch    chan struct{}
-	cache agent.Cache[*v1beta1.ShootList]
+	cache cache.GardenerCache
 	err   error
 }
 
-func (stub *resourceGetterStub) GetGardenerCache() agent.Cache[*v1beta1.ShootList] {
+func (stub *resourceGetterStub) GetGardenerCache() cache.GardenerCache {
 	<-stub.ch
 	return stub.cache
 }
@@ -240,8 +239,8 @@ func Test_watcher_start(t *testing.T) {
 
 		stop := make(chan interface{})
 		w := watcher{
-			w: &agent.ServerCache{
-				GardenerCache: agent.NewCache[*v1beta1.ShootList](),
+			w: &cache.ServerCache{
+				GardenerCache: cache.NewGardenerCache(),
 			},
 			getConfig: func(s string) (*config.Config, error) {
 				return &config.Config{

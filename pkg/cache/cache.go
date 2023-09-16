@@ -1,18 +1,25 @@
-package agent
+package cache
 
 import (
 	"sync"
 	"time"
 
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	"github.com/pPrecel/cloudagent/pkg/types"
 )
 
+type GardenerCache Cache[*types.ShootList]
+type GardenerRegisteredResource RegisteredResource[*types.ShootList]
+
+func NewGardenerCache() GardenerCache {
+	return NewCache[*types.ShootList]()
+}
+
 type ServerCache struct {
-	GardenerCache Cache[*v1beta1.ShootList]
+	GardenerCache GardenerCache
 	GeneralError  error
 }
 
-func (sc *ServerCache) GetGardenerCache() Cache[*v1beta1.ShootList] {
+func (sc *ServerCache) GetGardenerCache() GardenerCache {
 	return sc.GardenerCache
 }
 

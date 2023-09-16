@@ -3,8 +3,9 @@ package agent
 import (
 	"time"
 
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
+	"github.com/pPrecel/cloudagent/pkg/cache"
+	"github.com/pPrecel/cloudagent/pkg/types"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -30,7 +31,7 @@ func toGardenerResponse(serverCache ResourceGetter) *cloud_agent.GardenerRespons
 	}
 }
 
-func toShootList(resource RegisteredResource[*v1beta1.ShootList]) *cloud_agent.ShootList {
+func toShootList(resource cache.GardenerRegisteredResource) *cloud_agent.ShootList {
 	r := resource.Get()
 
 	err := ""
@@ -56,7 +57,7 @@ func toShootList(resource RegisteredResource[*v1beta1.ShootList]) *cloud_agent.S
 	return list
 }
 
-func toShoot(shoot *v1beta1.Shoot) *cloud_agent.Shoot {
+func toShoot(shoot *types.Shoot) *cloud_agent.Shoot {
 	cond := cloud_agent.Condition_HEALTHY
 	if shoot.Status.IsHibernated {
 		cond = cloud_agent.Condition_HIBERNATED
@@ -77,7 +78,7 @@ func toShoot(shoot *v1beta1.Shoot) *cloud_agent.Shoot {
 	}
 }
 
-func lastConditionUpdate(shoot *v1beta1.Shoot) *timestamppb.Timestamp {
+func lastConditionUpdate(shoot *types.Shoot) *timestamppb.Timestamp {
 	last := time.Time{}
 	for i := range shoot.Status.Conditions {
 		cond := shoot.Status.Conditions[i]
@@ -90,9 +91,9 @@ func lastConditionUpdate(shoot *v1beta1.Shoot) *timestamppb.Timestamp {
 	return timestamppb.New(last)
 }
 
-func isConditionUnknown(shoot *v1beta1.Shoot) bool {
+func isConditionUnknown(shoot *types.Shoot) bool {
 	for i := range shoot.Status.Conditions {
-		if shoot.Status.Conditions[i].Status != v1beta1.ConditionTrue {
+		if shoot.Status.Conditions[i].Status != types.ConditionTrue {
 			return true
 		}
 	}

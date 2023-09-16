@@ -7,9 +7,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloudagent/internal/gardener/automock"
-	"github.com/pPrecel/cloudagent/pkg/agent"
+	"github.com/pPrecel/cloudagent/pkg/cache"
+	"github.com/pPrecel/cloudagent/pkg/types"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -18,8 +18,8 @@ import (
 )
 
 var (
-	shootList = &v1beta1.ShootList{
-		Items: []v1beta1.Shoot{
+	shootList = &types.ShootList{
+		Items: []types.Shoot{
 			{
 				ObjectMeta: v1.ObjectMeta{
 					Name:      "name1",
@@ -54,22 +54,22 @@ func Test_newWatchFunc(t *testing.T) {
 	})
 
 	type args struct {
-		r             agent.RegisteredResource[*v1beta1.ShootList]
+		r             cache.GardenerRegisteredResource
 		clientBuilder func() (Client, error)
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    *v1beta1.ShootList
+		want    *types.ShootList
 		wantErr bool
 	}{
 		{
 			name: "list resources",
 			args: args{
-				r: agent.NewCache[*v1beta1.ShootList]().Register("test"),
+				r: cache.NewGardenerCache().Register("test"),
 				clientBuilder: func() (Client, error) {
 					c := automock.NewClient(t)
-					c.On("List", mock.Anything, v1.ListOptions{}).Return(shootList, nil).Once()
+					c.On("List", mock.Anything).Return(shootList, nil).Once()
 
 					return c, nil
 				},
@@ -80,10 +80,10 @@ func Test_newWatchFunc(t *testing.T) {
 		{
 			name: "list resources with error",
 			args: args{
-				r: agent.NewCache[*v1beta1.ShootList]().Register("test"),
+				r: cache.NewGardenerCache().Register("test"),
 				clientBuilder: func() (Client, error) {
 					c := automock.NewClient(t)
-					c.On("List", mock.Anything, v1.ListOptions{}).Return(nil, errors.New("test error")).Once()
+					c.On("List", mock.Anything).Return(nil, errors.New("test error")).Once()
 
 					return c, nil
 				},
@@ -94,10 +94,10 @@ func Test_newWatchFunc(t *testing.T) {
 		{
 			name: "list error",
 			args: args{
-				r: agent.NewCache[*v1beta1.ShootList]().Register("test"),
+				r: cache.NewGardenerCache().Register("test"),
 				clientBuilder: func() (Client, error) {
 					c := automock.NewClient(t)
-					c.On("List", mock.Anything, v1.ListOptions{}).Return(nil, errors.New("test error")).Once()
+					c.On("List", mock.Anything).Return(nil, errors.New("test error")).Once()
 
 					return c, nil
 				},
@@ -107,7 +107,7 @@ func Test_newWatchFunc(t *testing.T) {
 		{
 			name: "client built error",
 			args: args{
-				r: agent.NewCache[*v1beta1.ShootList]().Register("test"),
+				r: cache.NewGardenerCache().Register("test"),
 				clientBuilder: func() (Client, error) {
 					return nil, errors.New("test error")
 				},
