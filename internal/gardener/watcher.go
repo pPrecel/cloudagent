@@ -57,11 +57,11 @@ func newClientBuilder(l *logrus.Entry, buildConfig func(string) (*rest.Config, e
 		}
 
 		l.Debug("creating gardener client")
-		c, err := newClient(cfg)
+		c, err := newShootClient(cfg, namespace)
 		if err != nil {
 			return nil, err
 		}
 
-		return c.Shoots(namespace), nil
+		return c, nil
 	}
 }

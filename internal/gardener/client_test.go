@@ -59,7 +59,7 @@ func TestNewClient(t *testing.T) {
 		actualCfg, err := fixRestClient()
 		assert.NoError(t, err)
 
-		c, err := newClient(actualCfg)
+		c, err := newShootClient(actualCfg, "")
 		assert.NoError(t, err)
 		assert.NotNil(t, c)
 	})
@@ -68,7 +68,7 @@ func TestNewClient(t *testing.T) {
 		actualCfg, err := fixWrongRestClient()
 		assert.NoError(t, err)
 
-		c, err := newClient(actualCfg)
+		c, err := newShootClient(actualCfg, "")
 		assert.Error(t, err)
 		assert.Nil(t, c)
 	})
