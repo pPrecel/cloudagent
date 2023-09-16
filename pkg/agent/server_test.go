@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
 	"github.com/pPrecel/cloudagent/pkg/cache"
+	"github.com/pPrecel/cloudagent/pkg/types"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	testGardenerShootList = &v1beta1.ShootList{
-		Items: []v1beta1.Shoot{
+	testGardenerShootList = &types.ShootList{
+		Items: []types.Shoot{
 			{
 				ObjectMeta: v1.ObjectMeta{
 					Name:      "name1",
@@ -32,7 +32,7 @@ var (
 						"annotation2": "val2",
 					},
 				},
-				Status: v1beta1.ShootStatus{
+				Status: types.ShootStatus{
 					IsHibernated: true,
 				},
 			},
@@ -47,10 +47,10 @@ var (
 						"annotation2": "val2",
 					},
 				},
-				Status: v1beta1.ShootStatus{
-					Conditions: []v1beta1.Condition{
+				Status: types.ShootStatus{
+					Conditions: []types.Condition{
 						{
-							Status: v1beta1.ConditionTrue,
+							Status: types.ConditionTrue,
 						},
 					},
 				},
@@ -61,14 +61,14 @@ var (
 					Namespace:         "namespace1",
 					CreationTimestamp: v1.NewTime(fixRFC3339Time("2022-09-10T01:08:00Z")),
 				},
-				Status: v1beta1.ShootStatus{
-					Conditions: []v1beta1.Condition{
+				Status: types.ShootStatus{
+					Conditions: []types.Condition{
 						{
-							Status:             v1beta1.ConditionTrue,
+							Status:             types.ConditionTrue,
 							LastTransitionTime: v1.NewTime(fixRFC3339Time("2022-09-10T10:08:17Z")),
 						},
 						{
-							Status:             v1beta1.ConditionFalse,
+							Status:             "False",
 							LastTransitionTime: v1.NewTime(fixRFC3339Time("2022-09-10T10:02:00Z")),
 						},
 					},
@@ -77,8 +77,8 @@ var (
 			{},
 		},
 	}
-	testGardenerShootList2 = &v1beta1.ShootList{
-		Items: []v1beta1.Shoot{
+	testGardenerShootList2 = &types.ShootList{
+		Items: []types.Shoot{
 			{
 				ObjectMeta: v1.ObjectMeta{
 					Name:      "name1",
@@ -92,7 +92,7 @@ var (
 						"annotation2": "val2",
 					},
 				},
-				Status: v1beta1.ShootStatus{
+				Status: types.ShootStatus{
 					IsHibernated: true,
 				},
 			},
@@ -248,7 +248,7 @@ func Test_server_GardenerShoots(t *testing.T) {
 		{
 			name: "empty cache",
 			fields: fields{
-				gardenerCache: fixShootListCache(&v1beta1.ShootList{}),
+				gardenerCache: fixShootListCache(&types.ShootList{}),
 				logger:        l,
 			},
 			want: map[string]*cloud_agent.ShootList{
@@ -303,7 +303,7 @@ func compareMaps(t *testing.T, m1, m2 map[string]*cloud_agent.ShootList) {
 	}
 }
 
-func fixShootListCache(s *v1beta1.ShootList) *cache.ServerCache {
+func fixShootListCache(s *types.ShootList) *cache.ServerCache {
 	c := cache.NewGardenerCache()
 
 	c.Clean()

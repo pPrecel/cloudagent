@@ -10,12 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	command "github.com/pPrecel/cloudagent/cmd"
 	"github.com/pPrecel/cloudagent/internal/output"
 	"github.com/pPrecel/cloudagent/pkg/agent"
 	cloud_agent "github.com/pPrecel/cloudagent/pkg/agent/proto"
 	"github.com/pPrecel/cloudagent/pkg/cache"
+	"github.com/pPrecel/cloudagent/pkg/types"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	googlerpc "google.golang.org/grpc"
@@ -98,8 +98,8 @@ func Test_run(t *testing.T) {
 		o.updatedAfter = "2022-09-11"
 		o.updatedBefore = "2022-09-11"
 
-		r.Set(&v1beta1.ShootList{
-			Items: []v1beta1.Shoot{
+		r.Set(&types.ShootList{
+			Items: []types.Shoot{
 				{}, {}, {},
 			},
 		}, nil)
@@ -237,8 +237,8 @@ func Test_run(t *testing.T) {
 		o.socketNetwork = socketNetwork
 		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$a", "$e")
 
-		r.Set(&v1beta1.ShootList{
-			Items: []v1beta1.Shoot{
+		r.Set(&types.ShootList{
+			Items: []types.Shoot{
 				{}, {}, {},
 			},
 		}, nil)
@@ -263,8 +263,8 @@ func Test_run(t *testing.T) {
 		o.socketAddress = "\n"
 		o.outFormat = *output.NewFlag(&o.outFormat, output.TextType, "$a", "$e")
 
-		r.Set(&v1beta1.ShootList{
-			Items: []v1beta1.Shoot{
+		r.Set(&types.ShootList{
+			Items: []types.Shoot{
 				{}, {}, {},
 			},
 		}, nil)
@@ -294,8 +294,8 @@ func Test_run(t *testing.T) {
 		o.socketNetwork = socketNetwork
 		o.outFormat = *output.NewFlag(&o.outFormat, output.TableType, "$r/$h/$u/$a", "-/-/-/-")
 
-		r.Set(&v1beta1.ShootList{
-			Items: []v1beta1.Shoot{
+		r.Set(&types.ShootList{
+			Items: []types.Shoot{
 				{}, {}, {},
 			},
 		}, errors.New("test error"))

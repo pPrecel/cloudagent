@@ -4,14 +4,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	"github.com/pPrecel/cloudagent/pkg/types"
 )
 
-type GardenerCache Cache[*v1beta1.ShootList]
-type GardenerRegisteredResource RegisteredResource[*v1beta1.ShootList]
+type GardenerCache Cache[*types.ShootList]
+type GardenerRegisteredResource RegisteredResource[*types.ShootList]
 
 func NewGardenerCache() GardenerCache {
-	return NewCache[*v1beta1.ShootList]()
+	return NewCache[*types.ShootList]()
 }
 
 type ServerCache struct {

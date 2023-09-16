@@ -6,18 +6,18 @@ import (
 	"io"
 	"testing"
 
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloudagent/pkg/agent"
 	"github.com/pPrecel/cloudagent/pkg/cache"
 	"github.com/pPrecel/cloudagent/pkg/config"
+	"github.com/pPrecel/cloudagent/pkg/types"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
-	testShootList = &v1beta1.ShootList{
-		Items: []v1beta1.Shoot{
+	testShootList = &types.ShootList{
+		Items: []types.Shoot{
 			{
 				ObjectMeta: v1.ObjectMeta{
 					Name: "test-shoot",

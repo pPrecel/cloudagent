@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	"github.com/pPrecel/cloudagent/pkg/types"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -40,7 +40,7 @@ type shootClient struct {
 	namespace         string
 }
 
-func (sc *shootClient) List(ctx context.Context, opts v1.ListOptions) (*v1beta1.ShootList, error) {
+func (sc *shootClient) List(ctx context.Context, opts v1.ListOptions) (*types.ShootList, error) {
 	resources, err := sc.resourceInterface.Namespace(sc.namespace).List(ctx, opts)
 	if err != nil {
 		return nil, err
@@ -54,15 +54,15 @@ func (sc *shootClient) List(ctx context.Context, opts v1.ListOptions) (*v1beta1.
 	return sl, nil
 }
 
-func fromUnstructuredList(list *unstructured.UnstructuredList) (*v1beta1.ShootList, error) {
-	sl := &v1beta1.ShootList{}
+func fromUnstructuredList(list *unstructured.UnstructuredList) (*types.ShootList, error) {
+	sl := &types.ShootList{}
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(list.Object, sl)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, item := range list.Items {
-		shoot := &v1beta1.Shoot{}
+		shoot := &types.Shoot{}
 		err := runtime.DefaultUnstructuredConverter.FromUnstructured(item.Object, shoot)
 		if err != nil {
 			return nil, err

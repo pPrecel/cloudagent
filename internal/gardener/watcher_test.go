@@ -7,9 +7,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/pPrecel/cloudagent/internal/gardener/automock"
 	"github.com/pPrecel/cloudagent/pkg/cache"
+	"github.com/pPrecel/cloudagent/pkg/types"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -18,8 +18,8 @@ import (
 )
 
 var (
-	shootList = &v1beta1.ShootList{
-		Items: []v1beta1.Shoot{
+	shootList = &types.ShootList{
+		Items: []types.Shoot{
 			{
 				ObjectMeta: v1.ObjectMeta{
 					Name:      "name1",
@@ -60,7 +60,7 @@ func Test_newWatchFunc(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *v1beta1.ShootList
+		want    *types.ShootList
 		wantErr bool
 	}{
 		{
